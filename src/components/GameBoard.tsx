@@ -99,7 +99,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onAreaClick, se
                 position: 'relative',
                 width: '100%',
                 aspectRatio: '1464 / 2175',
-                backgroundImage: 'url(/images/board.png)',
+                backgroundImage: `url(${import.meta.env.BASE_URL}images/board.png)`,
                 backgroundSize: '100% 100%',
                 margin: '0 auto',
                 overflow: 'hidden',

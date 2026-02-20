@@ -7,13 +7,13 @@ const ALL_IMAGES: string[] = [];
 // Left Side: Cols 0-5, Rows 0-4
 for (let r = 0; r < 5; r++) {
     for (let c = 0; c <= 5; c++) {
-        ALL_IMAGES.push(`/images/sprite_left_r${r}_c${c}.png`);
+        ALL_IMAGES.push(`${import.meta.env.BASE_URL}images/sprite_left_r${r}_c${c}.png`);
     }
 }
 // Right Side: Cols 6-11, Rows 0-4
 for (let r = 0; r < 5; r++) {
     for (let c = 6; c <= 11; c++) {
-        ALL_IMAGES.push(`/images/sprite_right_r${r}_c${c}.png`);
+        ALL_IMAGES.push(`${import.meta.env.BASE_URL}images/sprite_right_r${r}_c${c}.png`);
     }
 }
 
