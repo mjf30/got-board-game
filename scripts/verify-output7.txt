@@ -1,0 +1,63 @@
+﻿Parsed: 146 vertices, 46 areas, 3 islands
+
+=== CRITICAL: Overlapping Edges (3+ areas) ===
+  OVERLAP: M6|M7 [455,190]->[620,210] used by: Widow's Watch, Shivering Sea, The Narrow Sea
+  OVERLAP: C1|H1 [75,555]->[85,620] used by: Blackwater, Sunset Sea, The Golden Sound
+  OVERLAP: G1|H1 [75,690]->[85,620] used by: Highgarden, Sunset Sea, The Golden Sound, West Summer Sea
+  OVERLAP: D1|G1 [75,748]->[75,690] used by: Oldtown, Sunset Sea, The Golden Sound, West Summer Sea
+  OVERLAP: D1|E1 [75,748]->[105,818] used by: Three Towers, Sunset Sea, The Golden Sound, West Summer Sea
+  OVERLAP: E5|E6 [445,798]->[545,788] used by: Yronwood, Sunspear, East Summer Sea
+  OVERLAP: B1|E1 [185,850]->[105,818] used by: Starfall, Sunset Sea, The Golden Sound, West Summer Sea
+  OVERLAP: B1|SM [185,850]->[230,850] used by: Sunset Sea, The Golden Sound, West Summer Sea
+  OVERLAP: SB|SM [230,920]->[230,850] used by: Sunset Sea, The Golden Sound, East Summer Sea, West Summer Sea
+  OVERLAP: BL|SB [0,920]->[230,920] used by: Sunset Sea, The Golden Sound, West Summer Sea
+  OVERLAP: B0|BL [45,850]->[0,920] used by: Sunset Sea, The Golden Sound, West Summer Sea
+  OVERLAP: B0|E0 [45,850]->[45,828] used by: Sunset Sea, The Golden Sound, West Summer Sea
+  OVERLAP: D0|E0 [45,760]->[45,828] used by: Sunset Sea, The Golden Sound, West Summer Sea
+  OVERLAP: D0|G0 [45,760]->[45,700] used by: Sunset Sea, The Golden Sound, West Summer Sea
+
+=== CRITICAL: Gap Edges (interior, used by 1 area) ===
+  GAP: N7|N8 [510,110]->[620,140] only in "Widow's Watch"
+  GAP: D7|E6 [545,718]->[545,788] only in "Yronwood"
+  GAP: B1|B2 [185,850]->[275,850] only in "Starfall"
+  GAP: D7|E5 [545,718]->[445,798] only in "Sunspear"
+  GAP: M6|N7 [455,190]->[510,110] only in "Shivering Sea"
+  GAP: C0|C1 [45,570]->[75,555] only in "Sunset Sea"
+  GAP: G0|SS_BOT [45,700]->[0,700] only in "Sunset Sea"
+  GAP: C0|H0 [45,570]->[45,635] only in "The Golden Sound"
+  GAP: B2|SM [275,850]->[230,850] only in "East Summer Sea"
+  GAP: H0|H1 [45,635]->[85,620] only in "West Summer Sea"
+
+=== INFO: Adjacency Verification ===
+  NO CONTACT: "Winterfell" <-> "Shivering Sea"
+  POINT ONLY: "The Stony Shore" <-> "Sunset Sea" (1 shared vertex(es))
+  NO CONTACT: "Moat Cailin" <-> "The Narrow Sea"
+  NO CONTACT: "The Mountains of the Moon" <-> "The Narrow Sea"
+  NO CONTACT: "Riverrun" <-> "Stoney Sept"
+  POINT ONLY: "Riverrun" <-> "Harrenhal" (1 shared vertex(es))
+  POINT ONLY: "Harrenhal" <-> "Kings Landing" (1 shared vertex(es))
+  POINT ONLY: "Lannisport" <-> "Stoney Sept" (1 shared vertex(es))
+  POINT ONLY: "Lannisport" <-> "The Golden Sound" (1 shared vertex(es))
+  NO CONTACT: "Searoad Marches" <-> "Highgarden"
+  NO CONTACT: "Searoad Marches" <-> "West Summer Sea"
+  NO CONTACT: "Kings Landing" <-> "Blackwater Bay"
+  NO CONTACT: "Blackwater" <-> "The Boneway"
+  NO CONTACT: "Kingswood" <-> "The Boneway"
+  NO CONTACT: "Storms End" <-> "East Summer Sea"
+  NO CONTACT: "Highgarden" <-> "Dornish Marches"
+  NO CONTACT: "Three Towers" <-> "Dornish Marches"
+  NO CONTACT: "Three Towers" <-> "East Summer Sea"
+  POINT ONLY: "Salt Shore" <-> "Sunspear" (1 shared vertex(es))
+  NO CONTACT: "Salt Shore" <-> "Sea of Dorne"
+  POINT ONLY: "Shivering Sea" <-> "White Harbor" (1 shared vertex(es))
+  NO CONTACT: "Shipbreaker Bay" <-> "The Narrow Sea"
+  POINT ONLY: "Shipbreaker Bay" <-> "Blackwater Bay" (1 shared vertex(es))
+  POINT ONLY: "Sea of Dorne" <-> "Yronwood" (1 shared vertex(es))
+
+=== SUMMARY ===
+  CRITICAL overlaps: 14
+  CRITICAL gaps:     10
+  INFO no-contact:   15
+  INFO point-only:   9
+  >>> 24 CRITICAL issues to fix <<<
+

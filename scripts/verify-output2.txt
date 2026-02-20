@@ -1,0 +1,86 @@
+﻿
+­ƒôè Parsed: 157 vertices, 46 areas, 3 islands
+
+ÔòÉÔòÉÔòÉ CHECK 1: Missing Vertex References ÔòÉÔòÉÔòÉ
+  Ô£à All vertex references valid
+
+ÔòÉÔòÉÔòÉ CHECK 2: Overlapping Edges (used by 3+ areas) ÔòÉÔòÉÔòÉ
+  ÔØî Edge L5|L6 used by 3 areas: Harrenhal, Stoney Sept, Kings Landing
+  ÔØî Edge H4|H5 used by 3 areas: Searoad Marches, Blackwater, The Reach
+  ÔØî Edge H3|H4 used by 3 areas: Searoad Marches, Blackwater, The Reach
+  ÔØî Edge C6|KW1 used by 3 areas: Kings Landing, Kingswood, Blackwater Bay
+
+ÔòÉÔòÉÔòÉ CHECK 3: Potential Gaps (interior edges used by only 1 area) ÔòÉÔòÉÔòÉ
+  ÔÜá´©Å  Edge K6ÔåöM6 only used by "White Harbor" (gap or missing neighbor)
+  ÔÜá´©Å  Edge M6ÔåöM7 only used by "Widow's Watch" (gap or missing neighbor)
+  ÔÜá´©Å  Edge R1ÔåöR2 only used by "Flint's Finger" (gap or missing neighbor)
+  ÔÜá´©Å  Edge IR_NÔåöIR_S only used by "Seagard" (gap or missing neighbor)
+  ÔÜá´©Å  Edge K6ÔåöR6 only used by "The Twins" (gap or missing neighbor)
+  ÔÜá´©Å  Edge R6ÔåöR7 only used by "The Fingers" (gap or missing neighbor)
+  ÔÜá´©Å  Edge EY_RÔåöR7 only used by "The Eyrie" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C5ÔåöC6 only used by "Stoney Sept" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C5ÔåöH5 only used by "Searoad Marches" (gap or missing neighbor)
+  ÔÜá´©Å  Edge EY_RÔåöP7 only used by "Crackclaw Point" (gap or missing neighbor)
+  ÔÜá´©Å  Edge L8ÔåöP7 only used by "Crackclaw Point" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C5ÔåöL5 only used by "Kings Landing" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C5ÔåöH3 only used by "Blackwater" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C6ÔåöL7 only used by "Kingswood" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C8ÔåöL8 only used by "Kingswood" (gap or missing neighbor)
+  ÔÜá´©Å  Edge D6ÔåöE5 only used by "Yronwood" (gap or missing neighbor)
+  ÔÜá´©Å  Edge E4ÔåöE5 only used by "Yronwood" (gap or missing neighbor)
+  ÔÜá´©Å  Edge B1ÔåöB2 only used by "Starfall" (gap or missing neighbor)
+  ÔÜá´©Å  Edge D6ÔåöE4 only used by "Sunspear" (gap or missing neighbor)
+  ÔÜá´©Å  Edge L0ÔåöP0 only used by "Sunset Sea" (gap or missing neighbor)
+  ÔÜá´©Å  Edge G0ÔåöH0 only used by "Sunset Sea" (gap or missing neighbor)
+  ÔÜá´©Å  Edge P0ÔåöP1 only used by "Ironman's Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge IR_SÔåöP1 only used by "Ironman's Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge L1ÔåöR2 only used by "Ironman's Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge IR_NÔåöR1 only used by "Ironman's Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge H0ÔåöH1 only used by "The Golden Sound" (gap or missing neighbor)
+  ÔÜá´©Å  Edge L0ÔåöL1 only used by "The Golden Sound" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C8ÔåöL7 only used by "Blackwater Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C8ÔåöC9 only used by "Blackwater Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C10ÔåöC9 only used by "Blackwater Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C10ÔåöC6 only used by "Blackwater Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge KW1ÔåöL6 only used by "Blackwater Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C10ÔåöC8 only used by "Shipbreaker Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge D0ÔåöG0 only used by "Redwyne Straits" (gap or missing neighbor)
+  ÔÜá´©Å  Edge B1ÔåöSM only used by "West Summer Sea" (gap or missing neighbor)
+  ÔÜá´©Å  Edge D0ÔåöH1 only used by "West Summer Sea" (gap or missing neighbor)
+  ÔÜá´©Å  Edge B2ÔåöSM only used by "East Summer Sea" (gap or missing neighbor)
+  Found 37 potential gap edges
+
+ÔòÉÔòÉÔòÉ CHECK 4: Adjacency Shared-Edge Verification ÔòÉÔòÉÔòÉ
+  ÔØî "Winterfell" Ôåö "Shivering Sea": NO shared edges or vertices (map.ts says adjacent)
+  ÔÜá´©Å  "The Stony Shore" Ôåö "Sunset Sea": share 1 vertex(es) but 0 edges (point contact only)
+  ÔØî "Riverrun" Ôåö "Stoney Sept": NO shared edges or vertices (map.ts says adjacent)
+  ÔÜá´©Å  "Stoney Sept" Ôåö "Blackwater": share 1 vertex(es) but 0 edges (point contact only)
+  ÔÜá´©Å  "Searoad Marches" Ôåö "West Summer Sea": share 1 vertex(es) but 0 edges (point contact only)
+  ÔÜá´©Å  "Crackclaw Point" Ôåö "Kings Landing": share 1 vertex(es) but 0 edges (point contact only)
+  ÔÜá´©Å  "Blackwater" Ôåö "The Boneway": share 1 vertex(es) but 0 edges (point contact only)
+  ÔØî "Storms End" Ôåö "East Summer Sea": NO shared edges or vertices (map.ts says adjacent)
+  ÔØî "Dragonstone" Ôåö "Shipbreaker Bay": NO shared edges or vertices (map.ts says adjacent)
+  ÔØî "Dragonstone" Ôåö "Blackwater Bay": NO shared edges or vertices (map.ts says adjacent)
+  ÔÜá´©Å  "Highgarden" Ôåö "Dornish Marches": share 1 vertex(es) but 0 edges (point contact only)
+  ÔÜá´©Å  "Highgarden" Ôåö "Redwyne Straits": share 1 vertex(es) but 0 edges (point contact only)
+  ÔØî "The Arbor" Ôåö "West Summer Sea": NO shared edges or vertices (map.ts says adjacent)
+  ÔØî "The Arbor" Ôåö "Redwyne Straits": NO shared edges or vertices (map.ts says adjacent)
+  ÔÜá´©Å  "The Reach" Ôåö "Oldtown": share 1 vertex(es) but 0 edges (point contact only)
+  ÔÜá´©Å  "Three Towers" Ôåö "Dornish Marches": share 1 vertex(es) but 0 edges (point contact only)
+  ÔØî "Three Towers" Ôåö "East Summer Sea": NO shared edges or vertices (map.ts says adjacent)
+  ÔØî "Salt Shore" Ôåö "Sea of Dorne": NO shared edges or vertices (map.ts says adjacent)
+  ÔÜá´©Å  "Sunspear" Ôåö "Yronwood": share 3 vertex(es) but 0 edges (point contact only)
+  ÔØî "Shivering Sea" Ôåö "White Harbor": NO shared edges or vertices (map.ts says adjacent)
+  ÔÜá´©Å  "The Golden Sound" Ôåö "West Summer Sea": share 1 vertex(es) but 0 edges (point contact only)
+  ÔÜá´©Å  "Shipbreaker Bay" Ôåö "Blackwater Bay": share 2 vertex(es) but 0 edges (point contact only)
+  ÔØî "Shipbreaker Bay" Ôåö "East Summer Sea": NO shared edges or vertices (map.ts says adjacent)
+  ÔÜá´©Å  "East Summer Sea" Ôåö "Starfall": share 1 vertex(es) but 0 edges (point contact only)
+  ÔÜá´©Å  "Sea of Dorne" Ôåö "Yronwood": share 1 vertex(es) but 0 edges (point contact only)
+
+ÔòÉÔòÉÔòÉ CHECK 5: Polygon Winding / Degenerate Check ÔòÉÔòÉÔòÉ
+  Ô£à All polygons have valid area
+
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+ÔÜá´©Å  Found 66 total issue(s) to fix
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+

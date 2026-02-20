@@ -1,0 +1,116 @@
+﻿Land areas: 35
+
+=== LAND OVERLAP CHECK ===
+  LAND OVERLAP: P5|P6 used by The Mountains of the Moon, Harrenhal, Crackclaw Point
+
+=== COASTLINE EDGES (land edges not shared by 2 land areas) ===
+  Found 47 coastline edges
+
+=== BOUNDARY VERTICES ===
+  T1: [200, 0]
+  T2: [270, 0]
+  T3: [370, 0]
+  T4: [440, 0]
+  W0: [0, 70]
+  W7: [620, 70]
+  N0: [0, 160]
+  N8: [620, 140]
+  M0: [0, 230]
+  M7: [620, 210]
+  K7: [620, 280]
+  R8: [620, 340]
+  P8: [620, 410]
+  L9: [620, 475]
+  C10: [620, 545]
+  H9: [620, 610]
+  G9: [620, 680]
+  D8: [620, 738]
+  E7: [620, 808]
+  B6: [620, 850]
+  SB: [230, 920]
+  SS_TOP: [0, 230]
+  SS_BOT: [0, 700]
+
+=== COAST EDGES PER LAND AREA ===
+  Castle Black: T2->T3, W3->T2
+  Karhold: T3->T4, T4->W5, W5->W6, W6->N7
+  The Stony Shore: W1->W2, M1->N1, N1->W1
+  Winterfell: W2->W3
+  White Harbor: M6->K6
+  Widow's Watch: N7->N8, N8->M7, M7->M6
+  Greywater Watch: K1->M1
+  Flint's Finger: R2->R1, R1->K1
+  The Twins: K6->R6
+  The Fingers: R6->R7
+  The Eyrie: R7->EY_R
+  Riverrun: P2->R2
+  Harrenhal: P6->L6
+  Lannisport: L2->P2
+  Searoad Marches: C2->L2
+  Crackclaw Point: EY_R->P7, P7->L8, L8->L7, L6->P5
+  Blackwater: H1->C1, C1->C2
+  Kingswood: L7->C8, C8->C9, C9->H9, H9->H8
+  Storms End: H8->G8, G8->G7
+  Highgarden: G1->H1
+  Oldtown: D1->G1
+  Three Towers: E1->D1
+  The Boneway: G7->D7
+  Yronwood: D7->E6
+  Starfall: B3->B2, B2->B1, B1->E1
+  Salt Shore: E5->B5, B5->B4, B4->B3
+  Sunspear: D7->D8, D8->E7, E7->E6, E5->D7
+
+=== LAND GAPS (interior land edges used by only 1 area) ===
+  LAND GAP: W2->W3 [200,60]->[270,45] in "Winterfell"
+    W2 in: The Stony Shore, Winterfell
+    W3 in: Castle Black, Winterfell
+  LAND GAP: K6->M6 [410,270]->[455,190] in "White Harbor"
+    K6 in: White Harbor, The Twins
+    M6 in: White Harbor, Widow's Watch
+  LAND GAP: K1->M1 [65,278]->[80,210] in "Greywater Watch"
+    K1 in: Greywater Watch, Flint's Finger
+    M1 in: The Stony Shore, Greywater Watch
+  LAND GAP: K6->R6 [410,270]->[420,310] in "The Twins"
+    K6 in: White Harbor, The Twins
+    R6 in: The Twins, The Fingers
+  LAND GAP: R6->R7 [420,310]->[490,330] in "The Fingers"
+    R6 in: The Twins, The Fingers
+    R7 in: The Fingers, The Eyrie
+  LAND GAP: EY_R->R7 [475,350]->[490,330] in "The Eyrie"
+    EY_R in: The Eyrie, Crackclaw Point
+    R7 in: The Fingers, The Eyrie
+  LAND GAP: P2->R2 [125,400]->[115,325] in "Riverrun"
+    P2 in: Riverrun, Lannisport
+    R2 in: Flint's Finger, Seagard, Riverrun
+  LAND GAP: L6->P6 [425,445]->[440,385] in "Harrenhal"
+    L6 in: Harrenhal, Crackclaw Point, Kings Landing, Kingswood
+    P6 in: The Mountains of the Moon, Harrenhal, Crackclaw Point
+  LAND GAP: L2->P2 [125,472]->[125,400] in "Lannisport"
+    L2 in: Lannisport, Searoad Marches
+    P2 in: Riverrun, Lannisport
+  LAND GAP: C2->L2 [140,540]->[125,472] in "Searoad Marches"
+    C2 in: Searoad Marches, Blackwater
+    L2 in: Lannisport, Searoad Marches
+  LAND GAP: L6->P5 [425,445]->[355,378] in "Crackclaw Point"
+    L6 in: Harrenhal, Crackclaw Point, Kings Landing, Kingswood
+    P5 in: The Mountains of the Moon, Harrenhal, Crackclaw Point
+  LAND GAP: G1->H1 [75,690]->[85,620] in "Highgarden"
+    G1 in: Highgarden, Oldtown
+    H1 in: Blackwater, Highgarden
+  LAND GAP: D1->G1 [75,748]->[75,690] in "Oldtown"
+    D1 in: Oldtown, Three Towers
+    G1 in: Highgarden, Oldtown
+  LAND GAP: D1->E1 [75,748]->[105,818] in "Three Towers"
+    D1 in: Oldtown, Three Towers
+    E1 in: Three Towers, Starfall
+  LAND GAP: D7->G7 [545,718]->[525,678] in "The Boneway"
+    D7 in: The Boneway, Yronwood, Sunspear
+    G7 in: Storms End, The Boneway
+  LAND GAP: D7->E6 [545,718]->[545,788] in "Yronwood"
+    D7 in: The Boneway, Yronwood, Sunspear
+    E6 in: Yronwood, Sunspear
+  LAND GAP: D7->E5 [545,718]->[445,798] in "Sunspear"
+    D7 in: The Boneway, Yronwood, Sunspear
+    E5 in: Yronwood, Salt Shore, Sunspear
+
+Total land overlaps: 1, Total land gaps: 17

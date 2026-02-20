@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #0f0f1a;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%);
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Cinzel', 'Georgia', serif;
+}
+
+h1 {
+  font-size: 1.6em;
+  line-height: 1.2;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a2e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3a3a5e;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5a5a8e;
+}
+
+/* Button transitions */
+button {
+  transition: all 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Selection styling */
+::selection {
+  background: rgba(212, 175, 55, 0.3);
+  color: #fff;
+}
+
+/* Pulsing ring for selected area on board */
+@keyframes area-pulse {
+  0%, 100% { box-shadow: 0 0 14px 3px rgba(255,215,0,0.45), inset 0 0 8px rgba(255,215,0,0.15); }
+  50% { box-shadow: 0 0 20px 6px rgba(255,215,0,0.65), inset 0 0 12px rgba(255,215,0,0.25); }
+}
+.area-selected-ring {
+  animation: area-pulse 2s ease-in-out infinite;
+}

@@ -1,0 +1,75 @@
+﻿Parsed: 148 vertices, 47 areas, 3 islands
+
+=== CRITICAL: Overlapping Edges (3+ areas) ===
+  OVERLAP: L7|L8 [485,460]->[545,450] used by: Crackclaw Point, Kingswood, Blackwater Bay
+  OVERLAP: H7|H8 [525,588]->[580,598] used by: Kingswood, Storms End, Shipbreaker Bay
+  OVERLAP: H6|H7 [462,568]->[525,588] used by: Kingswood, Storms End, Shipbreaker Bay
+  OVERLAP: G6|H6 [455,662]->[462,568] used by: Storms End, The Boneway, Shipbreaker Bay
+  OVERLAP: D6|G6 [475,728]->[455,662] used by: The Boneway, Shipbreaker Bay, Sea of Dorne
+  OVERLAP: E4|E5 [365,808]->[445,798] used by: Yronwood, Sunspear, East Summer Sea
+  OVERLAP: D6|D7 [475,728]->[545,718] used by: Sunspear, Shipbreaker Bay, Sea of Dorne
+  OVERLAP: D7|E6 [545,718]->[545,788] used by: Sunspear, Shipbreaker Bay, Sea of Dorne
+  OVERLAP: D8|G9 [620,738]->[620,680] used by: Shipbreaker Bay, Sea of Dorne, East Summer Sea
+  OVERLAP: D8|E7 [620,738]->[620,808] used by: Shipbreaker Bay, Sea of Dorne, East Summer Sea
+  OVERLAP: E6|E7 [545,788]->[620,808] used by: Shipbreaker Bay, Sea of Dorne, East Summer Sea
+
+=== CRITICAL: Gap Edges (interior, used by 1 area) ===
+  GAP: M6|M7 [455,190]->[620,210] only in "Widow's Watch"
+  GAP: P3|R3 [190,395]->[180,318] only in "Seagard"
+  GAP: P2|P3 [125,400]->[190,395] only in "Seagard"
+  GAP: R2|R3 [115,325]->[180,318] only in "Riverrun"
+  GAP: C6|L7 [425,515]->[485,460] only in "Kingswood"
+  GAP: C8|L8 [535,520]->[545,450] only in "Kingswood"
+  GAP: D6|E5 [475,728]->[445,798] only in "Yronwood"
+  GAP: B1|B2 [185,850]->[275,850] only in "Starfall"
+  GAP: D6|E4 [475,728]->[365,808] only in "Sunspear"
+  GAP: L0|P0 [45,500]->[45,430] only in "Sunset Sea"
+  GAP: G0|H0 [45,700]->[45,635] only in "Sunset Sea"
+  GAP: G0|SS_BOT [45,700]->[0,700] only in "Sunset Sea"
+  GAP: P0|P1 [45,430]->[65,415] only in "Ironman's Bay"
+  GAP: P1|P2 [65,415]->[125,400] only in "Ironman's Bay"
+  GAP: L1|R2 [65,490]->[115,325] only in "Ironman's Bay"
+  GAP: H0|H1 [45,635]->[85,620] only in "The Golden Sound"
+  GAP: L0|L1 [45,500]->[65,490] only in "The Golden Sound"
+  GAP: M6|N8 [455,190]->[620,140] only in "The Narrow Sea"
+  GAP: C6|C8 [425,515]->[535,520] only in "Blackwater Bay"
+  GAP: H8|H9 [580,598]->[620,610] only in "Shipbreaker Bay"
+  GAP: E0|E1 [45,828]->[105,818] only in "Redwyne Straits"
+  GAP: B0|E0 [45,850]->[45,828] only in "West Summer Sea"
+  GAP: B0|BL [45,850]->[0,920] only in "West Summer Sea"
+  GAP: B1|SM [185,850]->[230,850] only in "West Summer Sea"
+  GAP: E1|H1 [105,818]->[85,620] only in "West Summer Sea"
+  GAP: B2|SM [275,850]->[230,850] only in "East Summer Sea"
+
+=== INFO: Adjacency Verification ===
+  NO CONTACT: "Winterfell" <-> "Shivering Sea"
+  POINT ONLY: "The Stony Shore" <-> "Sunset Sea" (1 shared vertex(es))
+  NO CONTACT: "Moat Cailin" <-> "The Narrow Sea"
+  NO CONTACT: "The Mountains of the Moon" <-> "The Narrow Sea"
+  POINT ONLY: "Riverrun" <-> "Stoney Sept" (1 shared vertex(es))
+  POINT ONLY: "Stoney Sept" <-> "Searoad Marches" (1 shared vertex(es))
+  POINT ONLY: "Searoad Marches" <-> "West Summer Sea" (1 shared vertex(es))
+  POINT ONLY: "Crackclaw Point" <-> "Kings Landing" (1 shared vertex(es))
+  POINT ONLY: "Kingswood" <-> "The Boneway" (1 shared vertex(es))
+  NO CONTACT: "Storms End" <-> "East Summer Sea"
+  POINT ONLY: "Highgarden" <-> "Dornish Marches" (1 shared vertex(es))
+  POINT ONLY: "Highgarden" <-> "Redwyne Straits" (1 shared vertex(es))
+  POINT ONLY: "The Reach" <-> "Oldtown" (1 shared vertex(es))
+  POINT ONLY: "Three Towers" <-> "Dornish Marches" (1 shared vertex(es))
+  NO CONTACT: "Three Towers" <-> "East Summer Sea"
+  POINT ONLY: "Salt Shore" <-> "Sunspear" (1 shared vertex(es))
+  NO CONTACT: "Salt Shore" <-> "Sea of Dorne"
+  NO CONTACT: "Shivering Sea" <-> "White Harbor"
+  POINT ONLY: "Sunset Sea" <-> "West Summer Sea" (1 shared vertex(es))
+  POINT ONLY: "The Golden Sound" <-> "West Summer Sea" (1 shared vertex(es))
+  NO CONTACT: "Shipbreaker Bay" <-> "The Narrow Sea"
+  POINT ONLY: "East Summer Sea" <-> "Starfall" (1 shared vertex(es))
+  POINT ONLY: "Sea of Dorne" <-> "Yronwood" (1 shared vertex(es))
+
+=== SUMMARY ===
+  CRITICAL overlaps: 11
+  CRITICAL gaps:     26
+  INFO no-contact:   8
+  INFO point-only:   15
+  >>> 37 CRITICAL issues to fix <<<
+

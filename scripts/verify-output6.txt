@@ -1,0 +1,180 @@
+﻿Parsed: 146 vertices, 83 areas, 3 islands
+
+=== CRITICAL: Overlapping Edges (3+ areas) ===
+  OVERLAP: T3|W4 [370,0]->[370,45] used by: Castle Black, Karhold, Castle Black, Karhold
+  OVERLAP: W3|W4 [270,45]->[370,45] used by: Castle Black, Winterfell, Castle Black, Winterfell
+  OVERLAP: T2|W3 [270,0]->[270,45] used by: Castle Black, Bay of Ice, Castle Black, Bay of Ice
+  OVERLAP: T4|W5 [440,0]->[440,55] used by: Karhold, Karhold, Shivering Sea
+  OVERLAP: W5|W6 [440,55]->[500,70] used by: Karhold, Karhold, Shivering Sea
+  OVERLAP: N7|W6 [510,110]->[500,70] used by: Karhold, Karhold, Shivering Sea
+  OVERLAP: N6|N7 [460,120]->[510,110] used by: Karhold, Widow's Watch, Karhold, Widow's Watch
+  OVERLAP: N5|N6 [400,105]->[460,120] used by: Karhold, Widow's Watch, Karhold, Widow's Watch
+  OVERLAP: N5|W4 [400,105]->[370,45] used by: Karhold, Winterfell, Karhold, Winterfell
+  OVERLAP: W1|W2 [130,50]->[200,60] used by: The Stony Shore, Bay of Ice, The Stony Shore, Bay of Ice
+  OVERLAP: N2|W2 [170,120]->[200,60] used by: The Stony Shore, Winterfell, The Stony Shore, Winterfell
+  OVERLAP: M2|N2 [160,195]->[170,120] used by: The Stony Shore, Winterfell, The Stony Shore, Winterfell
+  OVERLAP: M1|M2 [80,210]->[160,195] used by: The Stony Shore, Greywater Watch, The Stony Shore, Greywater Watch
+  OVERLAP: M1|N1 [80,210]->[100,140] used by: The Stony Shore, Bay of Ice, The Stony Shore, Bay of Ice
+  OVERLAP: N1|W1 [100,140]->[130,50] used by: The Stony Shore, Bay of Ice, The Stony Shore, Bay of Ice
+  OVERLAP: W2|W3 [200,60]->[270,45] used by: Winterfell, Bay of Ice, Winterfell, Bay of Ice
+  OVERLAP: N4|N5 [330,115]->[400,105] used by: Winterfell, White Harbor, Shivering Sea, Winterfell, White Harbor
+  OVERLAP: M4|N4 [320,190]->[330,115] used by: Winterfell, White Harbor, Shivering Sea, Winterfell, White Harbor
+  OVERLAP: M3|M4 [235,185]->[320,190] used by: Winterfell, Moat Cailin, Winterfell, Moat Cailin
+  OVERLAP: M2|M3 [160,195]->[235,185] used by: Winterfell, Greywater Watch, Winterfell, Greywater Watch
+  OVERLAP: M5|N5 [395,180]->[400,105] used by: White Harbor, Widow's Watch, Shivering Sea, White Harbor, Widow's Watch
+  OVERLAP: M5|M6 [395,180]->[455,190] used by: White Harbor, Widow's Watch, Shivering Sea, White Harbor, Widow's Watch
+  OVERLAP: K6|M6 [410,270]->[455,190] used by: White Harbor, Shivering Sea, White Harbor, The Narrow Sea
+  OVERLAP: K5|K6 [340,260]->[410,270] used by: White Harbor, The Twins, Shivering Sea, White Harbor, The Twins
+  OVERLAP: K5|M4 [340,260]->[320,190] used by: White Harbor, Moat Cailin, Shivering Sea, White Harbor, Moat Cailin
+  OVERLAP: M7|N8 [620,210]->[620,140] used by: Widow's Watch, Shivering Sea, Widow's Watch, Shivering Sea
+  OVERLAP: M6|M7 [455,190]->[620,210] used by: Widow's Watch, Shivering Sea, Widow's Watch, Shivering Sea, The Narrow Sea
+  OVERLAP: K4|K5 [250,250]->[340,260] used by: Moat Cailin, The Twins, Moat Cailin, The Twins
+  OVERLAP: K3|K4 [175,255]->[250,250] used by: Moat Cailin, Seagard, Moat Cailin, Seagard
+  OVERLAP: K3|M3 [175,255]->[235,185] used by: Moat Cailin, Greywater Watch, Moat Cailin, Greywater Watch
+  OVERLAP: K2|K3 [115,260]->[175,255] used by: Greywater Watch, Seagard, Greywater Watch, Seagard
+  OVERLAP: K1|K2 [65,278]->[115,260] used by: Greywater Watch, Flint's Finger, Greywater Watch, Flint's Finger
+  OVERLAP: K1|M1 [65,278]->[80,210] used by: Greywater Watch, Greywater Watch, Sunset Sea
+  OVERLAP: K2|R2 [115,260]->[115,325] used by: Flint's Finger, Seagard, Flint's Finger, Seagard
+  OVERLAP: R1|R2 [65,342]->[115,325] used by: Flint's Finger, Flint's Finger, Ironman's Bay
+  OVERLAP: K1|R1 [65,278]->[65,342] used by: Flint's Finger, Flint's Finger, Sunset Sea
+  OVERLAP: K4|R4 [250,250]->[260,315] used by: Seagard, The Twins, Seagard, The Twins
+  OVERLAP: R3|R4 [180,318]->[260,315] used by: Seagard, Riverrun, Seagard, Riverrun
+  OVERLAP: R2|R3 [115,325]->[180,318] used by: Seagard, Riverrun, Seagard, Riverrun
+  OVERLAP: K6|R6 [410,270]->[420,310] used by: The Twins, The Twins, The Narrow Sea
+  OVERLAP: R5|R6 [340,320]->[420,310] used by: The Twins, The Fingers, The Twins, The Fingers
+  OVERLAP: R4|R5 [260,315]->[340,320] used by: The Twins, The Mountains of the Moon, The Twins, The Mountains of the Moon
+  OVERLAP: R6|R7 [420,310]->[490,330] used by: The Fingers, The Fingers, The Narrow Sea
+  OVERLAP: EY_T|R7 [405,328]->[490,330] used by: The Fingers, The Eyrie, The Fingers, The Eyrie
+  OVERLAP: EY_T|R5 [405,328]->[340,320] used by: The Fingers, The Mountains of the Moon, The Fingers, The Mountains of the Moon
+  OVERLAP: EY_R|R7 [475,350]->[490,330] used by: The Eyrie, The Eyrie, The Narrow Sea
+  OVERLAP: EY_B|EY_R [435,372]->[475,350] used by: The Eyrie, Crackclaw Point, The Eyrie, Crackclaw Point
+  OVERLAP: EY_B|EY_T [435,372]->[405,328] used by: The Eyrie, The Mountains of the Moon, The Eyrie, The Mountains of the Moon
+  OVERLAP: EY_B|P6 [435,372]->[440,385] used by: The Mountains of the Moon, Crackclaw Point, The Mountains of the Moon, Crackclaw Point
+  OVERLAP: P5|P6 [355,378]->[440,385] used by: The Mountains of the Moon, Crackclaw Point, The Mountains of the Moon, Crackclaw Point
+  OVERLAP: P4|P5 [270,390]->[355,378] used by: The Mountains of the Moon, Harrenhal, The Mountains of the Moon, Harrenhal
+  OVERLAP: P4|R4 [270,390]->[260,315] used by: The Mountains of the Moon, Riverrun, The Mountains of the Moon, Riverrun
+  OVERLAP: P3|P4 [190,395]->[270,390] used by: Riverrun, Lannisport, Riverrun, Lannisport
+  OVERLAP: P2|P3 [125,400]->[190,395] used by: Riverrun, Lannisport, Riverrun, Lannisport
+  OVERLAP: P2|R2 [125,400]->[115,325] used by: Riverrun, Riverrun, Ironman's Bay
+  OVERLAP: L5|P5 [350,450]->[355,378] used by: Harrenhal, Crackclaw Point, Harrenhal, Crackclaw Point
+  OVERLAP: L4|L5 [265,455]->[350,450] used by: Harrenhal, Stoney Sept, Harrenhal, Stoney Sept
+  OVERLAP: L4|P4 [265,455]->[270,390] used by: Harrenhal, Lannisport, Harrenhal, Lannisport
+  OVERLAP: L3|L4 [190,460]->[265,455] used by: Lannisport, Searoad Marches, Lannisport, Searoad Marches
+  OVERLAP: L2|L3 [125,472]->[190,460] used by: Lannisport, Searoad Marches, Lannisport, Searoad Marches
+  OVERLAP: L2|P2 [125,472]->[125,400] used by: Lannisport, Lannisport, Ironman's Bay
+  OVERLAP: C5|L5 [365,520]->[350,450] used by: Stoney Sept, Kings Landing, Stoney Sept, Kings Landing
+  OVERLAP: C4|C5 [290,528]->[365,520] used by: Stoney Sept, Blackwater, Stoney Sept, Blackwater
+  OVERLAP: C4|L4 [290,528]->[265,455] used by: Stoney Sept, Searoad Marches, Stoney Sept, Searoad Marches
+  OVERLAP: C3|C4 [205,535]->[290,528] used by: Searoad Marches, Blackwater, Searoad Marches, Blackwater
+  OVERLAP: C2|C3 [140,540]->[205,535] used by: Searoad Marches, Blackwater, Searoad Marches, Blackwater
+  OVERLAP: C2|L2 [140,540]->[125,472] used by: Searoad Marches, Searoad Marches, The Golden Sound
+  OVERLAP: EY_R|P7 [475,350]->[510,398] used by: Crackclaw Point, Crackclaw Point, The Narrow Sea
+  OVERLAP: L8|P7 [545,450]->[510,398] used by: Crackclaw Point, Crackclaw Point, The Narrow Sea
+  OVERLAP: L7|L8 [485,460]->[545,450] used by: Crackclaw Point, Crackclaw Point, Blackwater Bay
+  OVERLAP: L6|L7 [425,445]->[485,460] used by: Crackclaw Point, Kingswood, Crackclaw Point, Kingswood
+  OVERLAP: L5|L6 [350,450]->[425,445] used by: Crackclaw Point, Kings Landing, Crackclaw Point, Kings Landing
+  OVERLAP: C6|L6 [425,515]->[425,445] used by: Kings Landing, Kingswood, Kings Landing, Kingswood
+  OVERLAP: C5|C6 [365,520]->[425,515] used by: Kings Landing, Blackwater, Kings Landing, Blackwater
+  OVERLAP: C6|C7 [425,515]->[475,530] used by: Blackwater, Kingswood, Blackwater, Kingswood
+  OVERLAP: C7|H6 [475,530]->[462,592] used by: Blackwater, Kingswood, Blackwater, Kingswood
+  OVERLAP: H5|H6 [395,598]->[462,592] used by: Blackwater, Dornish Marches, Blackwater, Dornish Marches
+  OVERLAP: H4|H5 [315,602]->[395,598] used by: Blackwater, The Reach, Blackwater, The Reach
+  OVERLAP: H3|H4 [235,608]->[315,602] used by: Blackwater, The Reach, Blackwater, The Reach
+  OVERLAP: H2|H3 [155,612]->[235,608] used by: Blackwater, Highgarden, Blackwater, Highgarden
+  OVERLAP: H1|H2 [85,620]->[155,612] used by: Blackwater, Highgarden, Blackwater, Highgarden
+  OVERLAP: C1|H1 [75,555]->[85,620] used by: Blackwater, Blackwater, The Golden Sound
+  OVERLAP: C1|C2 [75,555]->[140,540] used by: Blackwater, Blackwater, The Golden Sound
+  OVERLAP: C8|L7 [535,520]->[485,460] used by: Kingswood, Kingswood, Blackwater Bay
+  OVERLAP: C8|C9 [535,520]->[585,540] used by: Kingswood, Kingswood, Blackwater Bay
+  OVERLAP: C9|H9 [585,540]->[620,610] used by: Kingswood, Kingswood, Blackwater Bay
+  OVERLAP: H8|H9 [580,598]->[620,610] used by: Kingswood, Kingswood, Shipbreaker Bay
+  OVERLAP: H7|H8 [525,588]->[580,598] used by: Kingswood, Storms End, Kingswood, Storms End
+  OVERLAP: H6|H7 [462,592]->[525,588] used by: Kingswood, Storms End, Kingswood, Storms End
+  OVERLAP: G8|H8 [580,688]->[580,598] used by: Storms End, Storms End, Shipbreaker Bay
+  OVERLAP: G7|G8 [525,678]->[580,688] used by: Storms End, Storms End, Sea of Dorne
+  OVERLAP: G6|G7 [455,662]->[525,678] used by: Storms End, The Boneway, Storms End, The Boneway
+  OVERLAP: G6|H6 [455,662]->[462,592] used by: Storms End, Dornish Marches, Storms End, Dornish Marches
+  OVERLAP: G3|H3 [220,678]->[235,608] used by: Highgarden, The Reach, Highgarden, The Reach
+  OVERLAP: G2|G3 [145,685]->[220,678] used by: Highgarden, Oldtown, Highgarden, Oldtown
+  OVERLAP: G1|G2 [75,690]->[145,685] used by: Highgarden, Oldtown, Highgarden, Oldtown
+  OVERLAP: G1|H1 [75,690]->[85,620] used by: Highgarden, Highgarden, West Summer Sea
+  OVERLAP: G5|H5 [385,668]->[395,598] used by: The Reach, Dornish Marches, The Reach, Dornish Marches
+  OVERLAP: G4|G5 [305,672]->[385,668] used by: The Reach, Dornish Marches, The Reach, Dornish Marches
+  OVERLAP: G3|G4 [220,678]->[305,672] used by: The Reach, Oldtown, The Reach, Oldtown
+  OVERLAP: D4|G4 [305,738]->[305,672] used by: Oldtown, Dornish Marches, Oldtown, Dornish Marches
+  OVERLAP: D3|D4 [220,732]->[305,738] used by: Oldtown, Prince's Pass, Oldtown, Prince's Pass
+  OVERLAP: D2|D3 [145,738]->[220,732] used by: Oldtown, Three Towers, Oldtown, Three Towers
+  OVERLAP: D1|D2 [75,748]->[145,738] used by: Oldtown, Three Towers, Oldtown, Three Towers
+  OVERLAP: D1|G1 [75,748]->[75,690] used by: Oldtown, Oldtown, West Summer Sea
+  OVERLAP: D3|E2 [220,732]->[185,808] used by: Three Towers, Prince's Pass, Three Towers, Prince's Pass
+  OVERLAP: E1|E2 [105,818]->[185,808] used by: Three Towers, Starfall, Three Towers, Starfall
+  OVERLAP: D1|E1 [75,748]->[105,818] used by: Three Towers, Three Towers, West Summer Sea
+  OVERLAP: D6|G6 [475,728]->[455,662] used by: Dornish Marches, The Boneway, Dornish Marches, The Boneway
+  OVERLAP: D5|D6 [395,732]->[475,728] used by: Dornish Marches, Yronwood, Dornish Marches, Yronwood
+  OVERLAP: D4|D5 [305,738]->[395,732] used by: Dornish Marches, Prince's Pass, Dornish Marches, Prince's Pass
+  OVERLAP: D5|E3 [395,732]->[275,802] used by: Prince's Pass, Yronwood, Prince's Pass, Yronwood
+  OVERLAP: E2|E3 [185,808]->[275,802] used by: Prince's Pass, Starfall, Prince's Pass, Starfall
+  OVERLAP: D7|G7 [545,718]->[525,678] used by: The Boneway, The Boneway, Sea of Dorne
+  OVERLAP: D6|D7 [475,728]->[545,718] used by: The Boneway, Yronwood, The Boneway, Yronwood
+  OVERLAP: E5|E6 [445,798]->[545,788] used by: Yronwood, Sunspear, Yronwood, Sunspear, East Summer Sea
+  OVERLAP: E4|E5 [365,808]->[445,798] used by: Yronwood, Salt Shore, Yronwood, Salt Shore
+  OVERLAP: E3|E4 [275,802]->[365,808] used by: Yronwood, Starfall, Yronwood, Starfall
+  OVERLAP: B3|E4 [365,850]->[365,808] used by: Starfall, Salt Shore, Starfall, Salt Shore
+  OVERLAP: B2|B3 [275,850]->[365,850] used by: Starfall, Starfall, East Summer Sea
+  OVERLAP: B1|E1 [185,850]->[105,818] used by: Starfall, Starfall, West Summer Sea
+  OVERLAP: B5|E5 [545,850]->[445,798] used by: Salt Shore, Salt Shore, East Summer Sea
+  OVERLAP: B4|B5 [445,850]->[545,850] used by: Salt Shore, Salt Shore, East Summer Sea
+  OVERLAP: B3|B4 [365,850]->[445,850] used by: Salt Shore, Salt Shore, East Summer Sea
+  OVERLAP: D7|D8 [545,718]->[620,738] used by: Sunspear, Sunspear, Sea of Dorne
+  OVERLAP: D8|E7 [620,738]->[620,808] used by: Sunspear, Sunspear, East Summer Sea
+  OVERLAP: E6|E7 [545,788]->[620,808] used by: Sunspear, Sunspear, East Summer Sea
+  OVERLAP: M0|M1 [0,230]->[80,210] used by: Bay of Ice, Bay of Ice, Sunset Sea
+
+=== CRITICAL: Gap Edges (interior, used by 1 area) ===
+  GAP: M6|T4 [455,190]->[440,0] only in "Shivering Sea"
+  GAP: M6|N7 [455,190]->[510,110] only in "Shivering Sea"
+  GAP: L0|P0 [45,500]->[45,430] only in "Sunset Sea"
+  GAP: G0|SS_BOT [45,700]->[0,700] only in "Sunset Sea"
+  GAP: L1|P1 [65,490]->[65,415] only in "Ironman's Bay"
+  GAP: P0|P1 [45,430]->[65,415] only in "Ironman's Bay"
+  GAP: L0|L1 [45,500]->[65,490] only in "The Golden Sound"
+  GAP: D0|G0 [45,760]->[45,700] only in "West Summer Sea"
+  GAP: D0|E0 [45,760]->[45,828] only in "West Summer Sea"
+  GAP: B0|E0 [45,850]->[45,828] only in "West Summer Sea"
+  GAP: B0|BL [45,850]->[0,920] only in "West Summer Sea"
+  GAP: B1|SM [185,850]->[230,850] only in "West Summer Sea"
+  GAP: B2|SM [275,850]->[230,850] only in "East Summer Sea"
+
+=== INFO: Adjacency Verification ===
+  NO CONTACT: "Winterfell" <-> "Shivering Sea"
+  POINT ONLY: "The Stony Shore" <-> "Sunset Sea" (1 shared vertex(es))
+  NO CONTACT: "Moat Cailin" <-> "The Narrow Sea"
+  NO CONTACT: "The Mountains of the Moon" <-> "The Narrow Sea"
+  NO CONTACT: "Riverrun" <-> "Stoney Sept"
+  POINT ONLY: "Riverrun" <-> "Harrenhal" (1 shared vertex(es))
+  POINT ONLY: "Harrenhal" <-> "Kings Landing" (1 shared vertex(es))
+  POINT ONLY: "Lannisport" <-> "Stoney Sept" (1 shared vertex(es))
+  POINT ONLY: "Lannisport" <-> "The Golden Sound" (1 shared vertex(es))
+  NO CONTACT: "Searoad Marches" <-> "Highgarden"
+  NO CONTACT: "Searoad Marches" <-> "West Summer Sea"
+  NO CONTACT: "Kings Landing" <-> "Blackwater Bay"
+  NO CONTACT: "Blackwater" <-> "The Boneway"
+  NO CONTACT: "Kingswood" <-> "The Boneway"
+  NO CONTACT: "Storms End" <-> "East Summer Sea"
+  NO CONTACT: "Highgarden" <-> "Dornish Marches"
+  NO CONTACT: "Three Towers" <-> "Dornish Marches"
+  NO CONTACT: "Three Towers" <-> "East Summer Sea"
+  POINT ONLY: "Salt Shore" <-> "Sunspear" (1 shared vertex(es))
+  NO CONTACT: "Salt Shore" <-> "Sea of Dorne"
+  POINT ONLY: "Shivering Sea" <-> "White Harbor" (1 shared vertex(es))
+  NO CONTACT: "Shipbreaker Bay" <-> "The Narrow Sea"
+  POINT ONLY: "Shipbreaker Bay" <-> "Blackwater Bay" (1 shared vertex(es))
+  POINT ONLY: "Sea of Dorne" <-> "Yronwood" (1 shared vertex(es))
+
+=== SUMMARY ===
+  CRITICAL overlaps: 128
+  CRITICAL gaps:     13
+  INFO no-contact:   15
+  INFO point-only:   9
+  >>> 141 CRITICAL issues to fix <<<
+

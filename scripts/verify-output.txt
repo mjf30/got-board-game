@@ -1,0 +1,89 @@
+﻿
+­ƒôè Parsed: 148 vertices, 47 areas, 3 islands
+
+ÔòÉÔòÉÔòÉ CHECK 1: Missing Vertex References ÔòÉÔòÉÔòÉ
+  Ô£à All vertex references valid
+
+ÔòÉÔòÉÔòÉ CHECK 2: Overlapping Edges (used by 3+ areas) ÔòÉÔòÉÔòÉ
+  ÔØî Edge C6|C7 used by 3 areas: Kings Landing, Blackwater, Blackwater Bay
+
+ÔòÉÔòÉÔòÉ CHECK 3: Potential Gaps (interior edges used by only 1 area) ÔòÉÔòÉÔòÉ
+  ÔÜá´©Å  Edge P2ÔåöR2 only used by "Seagard" (gap or missing neighbor)
+  ÔÜá´©Å  Edge R4ÔåöR5 only used by "The Twins" (gap or missing neighbor)
+  ÔÜá´©Å  Edge P4ÔåöR5 only used by "The Mountains of the Moon" (gap or missing neighbor)
+  ÔÜá´©Å  Edge P4ÔåöR4 only used by "Riverrun" (gap or missing neighbor)
+  ÔÜá´©Å  Edge L3ÔåöP2 only used by "Riverrun" (gap or missing neighbor)
+  ÔÜá´©Å  Edge L2ÔåöL3 only used by "Lannisport" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C6ÔåöH6 only used by "Blackwater" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C8ÔåöH8 only used by "Kingswood" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C7ÔåöH6 only used by "Kingswood" (gap or missing neighbor)
+  ÔÜá´©Å  Edge B1ÔåöB2 only used by "Starfall" (gap or missing neighbor)
+  ÔÜá´©Å  Edge D7ÔåöE6 only used by "Sunspear" (gap or missing neighbor)
+  ÔÜá´©Å  Edge L0ÔåöP0 only used by "Sunset Sea" (gap or missing neighbor)
+  ÔÜá´©Å  Edge G0ÔåöH0 only used by "Sunset Sea" (gap or missing neighbor)
+  ÔÜá´©Å  Edge G0ÔåöSS_BOT only used by "Sunset Sea" (gap or missing neighbor)
+  ÔÜá´©Å  Edge P0ÔåöP1 only used by "Ironman's Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge P1ÔåöP2 only used by "Ironman's Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge L2ÔåöP2 only used by "Ironman's Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge L1ÔåöR2 only used by "Ironman's Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge H0ÔåöH1 only used by "The Golden Sound" (gap or missing neighbor)
+  ÔÜá´©Å  Edge L0ÔåöL1 only used by "The Golden Sound" (gap or missing neighbor)
+  ÔÜá´©Å  Edge L8ÔåöL9 only used by "The Narrow Sea" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C9ÔåöL8 only used by "Blackwater Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C10ÔåöC9 only used by "Shipbreaker Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge H8ÔåöH9 only used by "Shipbreaker Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge C8ÔåöG8 only used by "Shipbreaker Bay" (gap or missing neighbor)
+  ÔÜá´©Å  Edge G8ÔåöG9 only used by "Sea of Dorne" (gap or missing neighbor)
+  ÔÜá´©Å  Edge D7ÔåöD8 only used by "Sea of Dorne" (gap or missing neighbor)
+  ÔÜá´©Å  Edge E0ÔåöE1 only used by "Redwyne Straits" (gap or missing neighbor)
+  ÔÜá´©Å  Edge B0ÔåöE0 only used by "West Summer Sea" (gap or missing neighbor)
+  ÔÜá´©Å  Edge B0ÔåöBL only used by "West Summer Sea" (gap or missing neighbor)
+  ÔÜá´©Å  Edge B1ÔåöSM only used by "West Summer Sea" (gap or missing neighbor)
+  ÔÜá´©Å  Edge E1ÔåöH1 only used by "West Summer Sea" (gap or missing neighbor)
+  ÔÜá´©Å  Edge E6ÔåöE7 only used by "East Summer Sea" (gap or missing neighbor)
+  ÔÜá´©Å  Edge B2ÔåöSM only used by "East Summer Sea" (gap or missing neighbor)
+  Found 34 potential gap edges
+
+ÔòÉÔòÉÔòÉ CHECK 4: Adjacency Shared-Edge Verification ÔòÉÔòÉÔòÉ
+  ÔØî "Winterfell" Ôåö "Shivering Sea": NO shared edges or vertices (map.ts says adjacent)
+  ÔÜá´©Å  "The Stony Shore" Ôåö "Sunset Sea": share 1 vertex(es) but 0 edges (point contact only)
+  ÔØî "Moat Cailin" Ôåö "The Narrow Sea": NO shared edges or vertices (map.ts says adjacent)
+  ÔÜá´©Å  "The Twins" Ôåö "The Mountains of the Moon": share 1 vertex(es) but 0 edges (point contact only)
+  ÔØî "The Mountains of the Moon" Ôåö "The Narrow Sea": NO shared edges or vertices (map.ts says adjacent)
+  ÔÜá´©Å  "Riverrun" Ôåö "Stoney Sept": share 1 vertex(es) but 0 edges (point contact only)
+  ÔÜá´©Å  "Stoney Sept" Ôåö "Searoad Marches": share 1 vertex(es) but 0 edges (point contact only)
+  ÔÜá´©Å  "Searoad Marches" Ôåö "West Summer Sea": share 1 vertex(es) but 0 edges (point contact only)
+  ÔÜá´©Å  "Crackclaw Point" Ôåö "Kings Landing": share 1 vertex(es) but 0 edges (point contact only)
+  ÔÜá´©Å  "Kings Landing" Ôåö "Kingswood": share 1 vertex(es) but 0 edges (point contact only)
+  ÔÜá´©Å  "Blackwater" Ôåö "Kingswood": share 2 vertex(es) but 0 edges (point contact only)
+  ÔØî "Blackwater" Ôåö "Dornish Marches": NO shared edges or vertices (map.ts says adjacent)
+  ÔÜá´©Å  "Kingswood" Ôåö "Shipbreaker Bay": share 2 vertex(es) but 0 edges (point contact only)
+  ÔØî "Storms End" Ôåö "East Summer Sea": NO shared edges or vertices (map.ts says adjacent)
+  ÔØî "Dragonstone" Ôåö "Shipbreaker Bay": NO shared edges or vertices (map.ts says adjacent)
+  ÔØî "Dragonstone" Ôåö "Blackwater Bay": NO shared edges or vertices (map.ts says adjacent)
+  ÔÜá´©Å  "Highgarden" Ôåö "Dornish Marches": share 1 vertex(es) but 0 edges (point contact only)
+  ÔÜá´©Å  "Highgarden" Ôåö "Redwyne Straits": share 1 vertex(es) but 0 edges (point contact only)
+  ÔØî "The Arbor" Ôåö "West Summer Sea": NO shared edges or vertices (map.ts says adjacent)
+  ÔØî "The Arbor" Ôåö "Redwyne Straits": NO shared edges or vertices (map.ts says adjacent)
+  ÔÜá´©Å  "The Reach" Ôåö "Oldtown": share 1 vertex(es) but 0 edges (point contact only)
+  ÔÜá´©Å  "Three Towers" Ôåö "Dornish Marches": share 1 vertex(es) but 0 edges (point contact only)
+  ÔØî "Three Towers" Ôåö "East Summer Sea": NO shared edges or vertices (map.ts says adjacent)
+  ÔØî "Salt Shore" Ôåö "Sunspear": NO shared edges or vertices (map.ts says adjacent)
+  ÔØî "Salt Shore" Ôåö "Sea of Dorne": NO shared edges or vertices (map.ts says adjacent)
+  ÔØî "Shivering Sea" Ôåö "White Harbor": NO shared edges or vertices (map.ts says adjacent)
+  ÔÜá´©Å  "Sunset Sea" Ôåö "West Summer Sea": share 1 vertex(es) but 0 edges (point contact only)
+  ÔÜá´©Å  "The Golden Sound" Ôåö "West Summer Sea": share 1 vertex(es) but 0 edges (point contact only)
+  ÔØî "Shipbreaker Bay" Ôåö "The Narrow Sea": NO shared edges or vertices (map.ts says adjacent)
+  ÔØî "Shipbreaker Bay" Ôåö "East Summer Sea": NO shared edges or vertices (map.ts says adjacent)
+  ÔÜá´©Å  "Blackwater Bay" Ôåö "The Narrow Sea": share 1 vertex(es) but 0 edges (point contact only)
+  ÔÜá´©Å  "East Summer Sea" Ôåö "Starfall": share 1 vertex(es) but 0 edges (point contact only)
+  ÔØî "East Summer Sea" Ôåö "Sea of Dorne": NO shared edges or vertices (map.ts says adjacent)
+  ÔÜá´©Å  "Sea of Dorne" Ôåö "Yronwood": share 1 vertex(es) but 0 edges (point contact only)
+
+ÔòÉÔòÉÔòÉ CHECK 5: Polygon Winding / Degenerate Check ÔòÉÔòÉÔòÉ
+  Ô£à All polygons have valid area
+
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+ÔÜá´©Å  Found 69 total issue(s) to fix
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+
