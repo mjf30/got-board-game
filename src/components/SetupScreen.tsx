@@ -3,6 +3,7 @@ import { HouseName } from '../game/types';
 
 interface SetupScreenProps {
     onStartGame: (playerCount: number) => void;
+    onOnline?: () => void;
 }
 
 const HOUSES: { name: HouseName; color: string; sigil: string; words: string; desc: string }[] = [
@@ -14,7 +15,7 @@ const HOUSES: { name: HouseName; color: string; sigil: string; words: string; de
     { name: 'Martell', color: '#e87511', sigil: '☀️', words: 'Unbowed, Unbent, Unbroken', desc: 'Dorne — Isolated, strong defense' },
 ];
 
-export const SetupScreen: React.FC<SetupScreenProps> = ({ onStartGame }) => {
+export const SetupScreen: React.FC<SetupScreenProps> = ({ onStartGame, onOnline }) => {
     const [playerCount, setPlayerCount] = useState(6);
 
     const activeHouses = HOUSES.slice(0, playerCount);
@@ -135,8 +136,20 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onStartGame }) => {
                     boxShadow: '0 4px 20px rgba(212,175,55,0.3)',
                     transition: 'all 0.2s'
                 }}>
-                    ⚔️ Begin the Game
+                    ⚔️ Jogar Local (hot-seat)
                 </button>
+
+                {onOnline && (
+                    <button onClick={onOnline} style={{
+                        width: '100%', padding: '14px', fontSize: '1.05em', fontWeight: 'bold',
+                        background: 'rgba(58,90,122,0.35)', marginTop: '12px',
+                        color: '#9cf', border: '1px solid #3a5a7a', borderRadius: '10px',
+                        cursor: 'pointer', fontFamily: "'Cinzel', serif",
+                        letterSpacing: '2px', textTransform: 'uppercase'
+                    }}>
+                        🌐 Jogar Online com amigos (P2P)
+                    </button>
+                )}
             </div>
         </div>
     );

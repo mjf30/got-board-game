@@ -1,32 +1,17 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createInitialGameState } from './game/setup'
-import {
-    resolvePhase, placeOrder, resolveMarch, finishMarch,
-    resolveRaid, resolveRaidNoEffect, resolveConsolidatePower,
-    leavePowerToken, declinePowerToken,
-    advanceActionTurn, useValyrianSteelBlade, useMessengerRaven,
-    musterUnit, skipMustering, skipAllMustering, upgradeFootman,
-    resolveRetreat, submitBid, resolveBids, chooseBidTieBreak, biddingParticipants,
-    resolveGameOfThrones, triggerCPStarMustering,
-    getPortForArea,
-    acknowledgeWildlingCard,
-    resolveNextWesterosCard, makeDecision,
-    resolveUnitSelection, resolveReconcileArmy,
-    resolveRavenPeek, skipRavenSwap
-} from './game/engine'
-import {
-    selectHouseCard, resolveCombat,
-    declareSupportChoice, resolveAeronSwap, resolveTyrionCancel,
-    resolvePatchfaceDiscard, resolveRobbRetreat
-} from './game/combat'
+import { biddingParticipants, getPortForArea } from './game/engine'
+import { GameAction, applyAction } from './net/actions'
+import { NetSession } from './net/online'
 import { UnitPickerModal } from './components/UnitPickerModal'
+import { OnlineLobby } from './components/OnlineLobby'
 import { GameBoard } from './components/GameBoard'
 import { CombatUI } from './components/CombatUI'
 import { SetupScreen } from './components/SetupScreen'
 import { GameTracks } from './components/GameTracks'
 import { WesterosPhase } from './components/WesterosPhase'
 import { RetreatModal } from './components/RetreatModal'
-import { HouseName, UnitType, ORDER_TOKENS, STAR_ORDER_LIMITS, getStarLimit, MUSTER_COSTS } from './game/types'
+import { GameState, HouseName, UnitType, ORDER_TOKENS, getStarLimit, MUSTER_COSTS } from './game/types'
 import { INITIAL_MAP } from './game/constants/map'
 
 type InteractionState =
@@ -34,38 +19,81 @@ type InteractionState =
     | { type: 'MARCH_SELECT_UNITS', fromAreaId: string }
     | { type: 'MARCH_SELECT_TO', fromAreaId: string, unitIds: string[] }
     | { type: 'RAID_SELECT_TO', fromAreaId: string }
-    | { type: 'RETREAT_SELECT_TO' }
-    | { type: 'RAVEN_SELECT_AREA' };
+    | { type: 'RETREAT_SELECT_TO' };
 
-// Debugging
-import { SpriteDebugger } from './components/SpriteDebugger';
+type Screen = 'menu' | 'online' | 'game';
 
 function App() {
-    const [gameStarted, setGameStarted] = useState(false);
+    const [screen, setScreen] = useState<Screen>('menu');
+    const [net, setNet] = useState<NetSession | null>(null);
+    const netRef = useRef<NetSession | null>(null);
     const [gameState, setGameState] = useState(() => createInitialGameState(6));
     const [selectedArea, setSelectedArea] = useState<string | null>(null);
     const [interaction, setInteraction] = useState<InteractionState>({ type: 'NONE' });
     const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([]);
     const [bidAmounts, setBidAmounts] = useState<Record<string, number>>({});
 
-    // Debug Toggle
-    const [showDebug, setShowDebug] = useState(true); // START IN DEBUG MODE
+    // ─── Dispatch: local applies directly; online guests send to the host ───
+    const dispatch = useCallback((a: GameAction) => {
+        const n = netRef.current;
+        if (!n || n.isHost) {
+            setGameState(prev => applyAction(prev, a));
+        } else {
+            n.sendAction(a);
+        }
+    }, []);
+
+    // Host: apply guest actions; Guest: adopt broadcast state
+    useEffect(() => {
+        netRef.current = net;
+        if (!net) return;
+        if (net.isHost) {
+            net.onAction = (a) => setGameState(prev => applyAction(prev, a));
+        } else {
+            net.onState = (s) => setGameState(s);
+        }
+    }, [net]);
+
+    // Host: broadcast every state change
+    useEffect(() => {
+        if (net?.isHost && screen === 'game') net.broadcastState(gameState);
+    }, [gameState, net, screen]);
+
+    // ─── Permissions ───
+    const myHouses = net ? net.myHouses() : null;
+    const canAct = (house?: HouseName | null) => !myHouses || (!!house && myHouses.includes(house));
+    const isHostOrLocal = !net || net.isHost;
 
     const handleStartGame = (playerCount: number) => {
         setGameState(createInitialGameState(playerCount));
-        setGameStarted(true);
+        setNet(null);
+        setScreen('game');
+    };
+
+    const handleOnlineStart = (session: NetSession, state: GameState) => {
+        setNet(session);
+        setGameState(state);
+        setScreen('game');
     };
 
     const handleNewGame = () => {
-        setGameStarted(false);
+        if (net) {
+            net.leave();
+            window.location.reload();
+            return;
+        }
+        setScreen('menu');
         setSelectedArea(null);
         setInteraction({ type: 'NONE' });
         setSelectedUnitIds([]);
         setBidAmounts({});
     };
 
-    if (!gameStarted) {
-        return <SetupScreen onStartGame={handleStartGame} />;
+    if (screen === 'menu') {
+        return <SetupScreen onStartGame={handleStartGame} onOnline={() => setScreen('online')} />;
+    }
+    if (screen === 'online') {
+        return <OnlineLobby onGameStart={handleOnlineStart} onBack={() => setScreen('menu')} />;
     }
 
     // ─── Area Click Handler ────────────────────────
@@ -76,8 +104,8 @@ function App() {
 
         // Retreat destination selection
         if (interaction.type === 'RETREAT_SELECT_TO' && gameState.pendingRetreat) {
-            if (gameState.pendingRetreat.possibleAreas.includes(areaId)) {
-                setGameState(prev => resolveRetreat(prev, areaId));
+            if (gameState.pendingRetreat.possibleAreas.includes(areaId) && canAct(gameState.pendingRetreat.house)) {
+                dispatch({ t: 'retreat', areaId });
                 setInteraction({ type: 'NONE' });
             }
             return;
@@ -85,38 +113,16 @@ function App() {
 
         // March destination
         if (interaction.type === 'MARCH_SELECT_TO') {
-            const unitIds = interaction.unitIds;
-            const fromId = interaction.fromAreaId;
-            setGameState(prev => {
-                let newState = resolveMarch(prev, fromId, areaId, unitIds);
-                const fromArea = newState.board[fromId];
-                if (newState.combat) {
-                    // Combat initiated — order already consumed, turn advances after combat
-                    setInteraction({ type: 'NONE' });
-                    return newState;
-                }
-                if (!fromArea.order || fromArea.units.length === 0) {
-                    // All units moved or order gone — consume order and advance turn
-                    newState = finishMarch(newState, fromId);
-                    newState = advanceActionTurn(newState);
-                    setInteraction({ type: 'NONE' });
-                    return newState;
-                }
-                // More units remain — split march, stay in unit selection
-                setInteraction({ type: 'MARCH_SELECT_UNITS', fromAreaId: fromId });
-                setSelectedUnitIds([]);
-                return newState;
-            });
+            dispatch({ t: 'marchMove', fromAreaId: interaction.fromAreaId, toAreaId: areaId, unitIds: interaction.unitIds });
+            setInteraction({ type: 'NONE' });
+            setSelectedUnitIds([]);
             setSelectedArea(areaId);
             return;
         }
 
         // Raid target
         if (interaction.type === 'RAID_SELECT_TO') {
-            setGameState(prev => {
-                const newState = resolveRaid(prev, interaction.fromAreaId, areaId);
-                return advanceActionTurn(newState);
-            });
+            dispatch({ t: 'raid', fromAreaId: interaction.fromAreaId, toAreaId: areaId });
             setInteraction({ type: 'NONE' });
             return;
         }
@@ -130,26 +136,8 @@ function App() {
             gameState.pendingRetreat || gameState.pendingUnitSelection || gameState.pendingDecision ||
             gameState.pendingBidTieBreak || gameState.pendingReconcile ||
             gameState.pendingRavenPeek || gameState.pendingRavenSwap) return;
-        if (gameState.phase === 'Action') {
-            if (gameState.actionSubPhase === 'Done') {
-                setGameState(prev => {
-                    const withCP = resolveConsolidatePower(prev);
-                    return resolvePhase(withCP);
-                });
-            } else {
-                setGameState(prev => advanceActionTurn(prev));
-            }
-        } else if (gameState.phase === 'Westeros') {
-            // If there are pending events, resolve them
-            if (gameState.pendingGameOfThrones) {
-                setGameState(prev => resolveGameOfThrones(prev));
-            } else {
-                // Let engine handle card drawing and phase transitions
-                setGameState(prev => resolvePhase(prev));
-            }
-        } else {
-            setGameState(prev => resolvePhase(prev));
-        }
+        if (!isHostOrLocal) return; // online: only the host paces the game
+        dispatch({ t: 'phaseAdvance' });
     };
 
     // ─── Order Placement ───────────────────────────
@@ -159,10 +147,12 @@ function App() {
         if (!area.house) return;
         // During the Messenger Raven step, placing a token means swapping via the raven
         if (gameState.pendingRavenSwap) {
-            setGameState(prev => useMessengerRaven(prev, selectedArea, tokenIndex));
+            if (!canAct(gameState.pendingRavenSwap.holder)) return;
+            dispatch({ t: 'ravenSwap', areaId: selectedArea, tokenIndex });
             return;
         }
-        setGameState(prev => placeOrder(prev, selectedArea, area.house!, tokenIndex));
+        if (!canAct(area.house)) return;
+        dispatch({ t: 'placeOrder', areaId: selectedArea, house: area.house!, tokenIndex });
     };
 
     // ─── March ─────────────────────────────────────
@@ -181,10 +171,7 @@ function App() {
 
     const handleFinishMarch = () => {
         if (interaction.type === 'MARCH_SELECT_UNITS') {
-            setGameState(prev => {
-                const newState = finishMarch(prev, interaction.fromAreaId);
-                return advanceActionTurn(newState);
-            });
+            dispatch({ t: 'finishMarch', fromAreaId: interaction.fromAreaId });
             setInteraction({ type: 'NONE' });
             setSelectedUnitIds([]);
         }
@@ -198,47 +185,46 @@ function App() {
 
     // ─── Combat Card Selection ─────────────────────
     const handleCardSelect = (house: HouseName, cardId: string) => {
-        setGameState(prev => selectHouseCard(prev, house, cardId));
+        if (!canAct(house)) return;
+        dispatch({ t: 'selectCard', house, cardId });
     };
 
     const handleResolveCombat = () => {
-        setGameState(prev => {
-            const c = prev.combat;
-            if (!c) return prev;
-            if ((!c.attackerCard && !c.attackerNoCard) || (!c.defenderCard && !c.defenderNoCard)) return prev;
-            // The combat pipeline advances the turn itself when it finishes
-            return resolveCombat(prev);
-        });
+        const c = gameState.combat;
+        if (!c) return;
+        if (!canAct(c.attacker) && !canAct(c.defender)) return;
+        dispatch({ t: 'resolveCombat' });
     };
 
     // ─── Valyrian Steel Blade ──────────────────────
     const handleUseBlade = () => {
-        setGameState(prev => useValyrianSteelBlade(prev));
+        dispatch({ t: 'useBlade' });
     };
 
     // ─── Mustering ─────────────────────────────────
     const handleMuster = (areaId: string, unitType: UnitType) => {
-        setGameState(prev => musterUnit(prev, areaId, unitType));
+        dispatch({ t: 'muster', areaId, unitType });
     };
 
     const handleSkipMustering = (areaId: string) => {
-        setGameState(prev => skipMustering(prev, areaId));
+        dispatch({ t: 'skipMuster', areaId });
     };
 
     // ─── Bidding ──────────────────────────────────────────────
     const handleSubmitBid = (house: HouseName) => {
+        if (!canAct(house)) return;
         const amount = bidAmounts[house] ?? 0;
-        setGameState(prev => submitBid(prev, house, amount));
+        dispatch({ t: 'bid', house, amount });
     };
 
     const handleResolveBids = () => {
-        setGameState(prev => resolveBids(prev));
+        dispatch({ t: 'resolveBids' });
         setBidAmounts({});
     };
 
     // ─── CP★ Mustering ────────────────────────────────────────
     const handleCPStarMuster = (areaId: string) => {
-        setGameState(prev => triggerCPStarMustering(prev, areaId));
+        dispatch({ t: 'cpStarMuster', areaId });
     };
 
     // ─── Retreat ───────────────────────────────────
@@ -276,6 +262,12 @@ function App() {
         gameState.cas[h].influence.kingsCourt < gameState.cas[best].influence.kingsCourt ? h : best
         , gameState.turnOrder[0]);
 
+    // Online: orders are placed facedown — hide other players' orders during Planning
+    const concealOrdersOf: HouseName[] =
+        myHouses && gameState.phase === 'Planning' && !gameState.ravenPromptShown && !gameState.pendingRavenSwap
+            ? gameState.turnOrder.filter(h => !myHouses.includes(h))
+            : [];
+
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto', color: '#eee' }}>
             {/* ═══ VICTORY BANNER ═══ */}
@@ -304,17 +296,21 @@ function App() {
                         <p style={{ fontSize: '0.85em', color: '#aaa' }}>
                             Power: <strong style={{ color: '#4f4' }}>{gameState.board[gameState.pendingPowerTokenArea]?.house ? gameState.cas[gameState.board[gameState.pendingPowerTokenArea].house!].power : 0}</strong>
                         </p>
-                        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '10px' }}>
-                            <button onClick={() => setGameState(prev => leavePowerToken(prev))}
-                                disabled={gameState.board[gameState.pendingPowerTokenArea]?.house ? gameState.cas[gameState.board[gameState.pendingPowerTokenArea].house!].power <= 0 : true}
-                                style={{ padding: '8px 20px', background: '#4a4', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
-                                💰 Yes, spend 1
-                            </button>
-                            <button onClick={() => setGameState(prev => declinePowerToken(prev))}
-                                style={{ padding: '8px 20px', background: '#a44', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
-                                ❌ No, lose it
-                            </button>
-                        </div>
+                        {canAct(gameState.board[gameState.pendingPowerTokenArea]?.house) ? (
+                            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '10px' }}>
+                                <button onClick={() => dispatch({ t: 'powerToken', keep: true })}
+                                    disabled={gameState.board[gameState.pendingPowerTokenArea]?.house ? gameState.cas[gameState.board[gameState.pendingPowerTokenArea].house!].power <= 0 : true}
+                                    style={{ padding: '8px 20px', background: '#4a4', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                    💰 Yes, spend 1
+                                </button>
+                                <button onClick={() => dispatch({ t: 'powerToken', keep: false })}
+                                    style={{ padding: '8px 20px', background: '#a44', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                    ❌ No, lose it
+                                </button>
+                            </div>
+                        ) : (
+                            <div style={{ color: '#aaa', marginTop: '10px' }}>Aguardando {gameState.board[gameState.pendingPowerTokenArea]?.house}…</div>
+                        )}
                     </div>
                 </div>
             )}
@@ -329,16 +325,17 @@ function App() {
                     <div style={{ background: '#2a2a2a', padding: '25px', borderRadius: '10px', border: '2px solid #d4af37', maxWidth: '500px', maxHeight: '80vh', overflow: 'auto' }}>
                         <h3 style={{ color: '#d4af37', margin: '0 0 15px' }}>🏗️ Mustering</h3>
                         {gameState.pendingMustering.map(m => (
-                            <div key={m.areaId} style={{ background: '#333', padding: '10px', borderRadius: '6px', marginBottom: '10px' }}>
+                            <div key={m.areaId} style={{ background: '#333', padding: '10px', borderRadius: '6px', marginBottom: '10px', opacity: canAct(m.house) ? 1 : 0.55 }}>
                                 <div style={{ fontWeight: 'bold', color: gameState.cas[m.house].color }}>
                                     {gameState.board[m.areaId].name} ({m.house}) — {m.pointsRemaining} point(s)
+                                    {!canAct(m.house) && <span style={{ color: '#888', fontWeight: 'normal', fontSize: '0.8em' }}> — aguardando {m.house}</span>}
                                 </div>
                                 <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '8px' }}>
                                     {(['Footman', 'Knight', 'SiegeEngine', 'Ship'] as UnitType[]).map(unitType => {
                                         const cost = MUSTER_COSTS[unitType];
                                         const available = gameState.cas[m.house].availableUnits[unitType] > 0;
                                         const affordable = cost <= m.pointsRemaining;
-                                        const canPlace = available && affordable;
+                                        const canPlace = available && affordable && canAct(m.house);
                                         // Ships need adjacent sea
                                         return (
                                             <button key={unitType}
@@ -357,14 +354,11 @@ function App() {
                                     })}
                                     {/* Upgrade Footman → Knight / Siege Engine (1 muster point each) */}
                                     {gameState.board[m.areaId].units.filter(u => u.type === 'Footman' && u.house === m.house).length > 0 &&
-                                     m.pointsRemaining >= 1 && (
+                                     m.pointsRemaining >= 1 && canAct(m.house) && (
                                         <>
                                             {gameState.cas[m.house].availableUnits.Knight > 0 && (
                                                 <button
-                                                    onClick={() => {
-                                                        const footman = gameState.board[m.areaId].units.find(u => u.type === 'Footman' && u.house === m.house);
-                                                        if (footman) setGameState(prev => upgradeFootman(prev, m.areaId, footman.id, 'Knight'));
-                                                    }}
+                                                    onClick={() => dispatch({ t: 'upgradeFootman', areaId: m.areaId, to: 'Knight' })}
                                                     style={{
                                                         padding: '4px 8px', fontSize: '0.8em',
                                                         background: '#a86f32', color: 'white',
@@ -376,10 +370,7 @@ function App() {
                                             )}
                                             {gameState.cas[m.house].availableUnits.SiegeEngine > 0 && (
                                                 <button
-                                                    onClick={() => {
-                                                        const footman = gameState.board[m.areaId].units.find(u => u.type === 'Footman' && u.house === m.house);
-                                                        if (footman) setGameState(prev => upgradeFootman(prev, m.areaId, footman.id, 'SiegeEngine'));
-                                                    }}
+                                                    onClick={() => dispatch({ t: 'upgradeFootman', areaId: m.areaId, to: 'SiegeEngine' })}
                                                     style={{
                                                         padding: '4px 8px', fontSize: '0.8em',
                                                         background: '#6f5a32', color: 'white',
@@ -391,17 +382,21 @@ function App() {
                                             )}
                                         </>
                                     )}
-                                    <button onClick={() => handleSkipMustering(m.areaId)}
-                                        style={{ padding: '4px 8px', fontSize: '0.8em', background: '#555', color: '#ddd', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
-                                        Skip
-                                    </button>
+                                    {canAct(m.house) && (
+                                        <button onClick={() => handleSkipMustering(m.areaId)}
+                                            style={{ padding: '4px 8px', fontSize: '0.8em', background: '#555', color: '#ddd', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
+                                            Skip
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}
-                        <button onClick={() => setGameState(prev => skipAllMustering(prev))}
-                            style={{ padding: '6px 15px', background: '#666', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '5px' }}>
-                            Skip All Mustering
-                        </button>
+                        {isHostOrLocal && (
+                            <button onClick={() => dispatch({ t: 'skipAllMuster' })}
+                                style={{ padding: '6px 15px', background: '#666', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '5px' }}>
+                                Skip All Mustering
+                            </button>
+                        )}
                     </div>
                 </div>
             )}
@@ -439,18 +434,25 @@ function App() {
                                     <span style={{ color: gameState.cas[house].color, fontWeight: 'bold', minWidth: '80px' }}>{house}</span>
                                     <span style={{ color: '#aaa', fontSize: '0.85em' }}>💰{gameState.cas[house].power}</span>
                                     {!hasBid ? (
-                                        <>
-                                            <input type="number" min={0} max={gameState.cas[house].power}
-                                                value={bidAmounts[house] ?? 0}
-                                                onChange={e => setBidAmounts(prev => ({ ...prev, [house]: Math.max(0, Math.min(gameState.cas[house].power, parseInt(e.target.value) || 0)) }))}
-                                                style={{ width: '50px', padding: '3px', background: '#444', color: 'white', border: '1px solid #666', borderRadius: '3px' }} />
-                                            <button onClick={() => handleSubmitBid(house)}
-                                                style={{ padding: '3px 10px', background: '#4a4', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85em' }}>
-                                                Bid
-                                            </button>
-                                        </>
+                                        canAct(house) ? (
+                                            <>
+                                                <input type="number" min={0} max={gameState.cas[house].power}
+                                                    value={bidAmounts[house] ?? 0}
+                                                    onChange={e => setBidAmounts(prev => ({ ...prev, [house]: Math.max(0, Math.min(gameState.cas[house].power, parseInt(e.target.value) || 0)) }))}
+                                                    style={{ width: '50px', padding: '3px', background: '#444', color: 'white', border: '1px solid #666', borderRadius: '3px' }} />
+                                                <button onClick={() => handleSubmitBid(house)}
+                                                    style={{ padding: '3px 10px', background: '#4a4', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.85em' }}>
+                                                    Bid
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <span style={{ color: '#888', fontSize: '0.85em' }}>aguardando…</span>
+                                        )
                                     ) : (
-                                        <span style={{ color: '#8f8', fontWeight: 'bold' }}>✓ Bid: {gameState.pendingBidding!.bids[house]}</span>
+                                        // Bids are secret: only reveal your own amount until everyone has bid
+                                        <span style={{ color: '#8f8', fontWeight: 'bold' }}>
+                                            {(!myHouses || canAct(house)) ? `✓ Bid: ${gameState.pendingBidding!.bids[house]}` : '✓ apostou'}
+                                        </span>
                                     )}
                                 </div>
                             );
@@ -478,29 +480,41 @@ function App() {
                              gameState.pendingBidTieBreak.kind === 'wildling-high' ? 'quem é o MAIOR lançador' :
                              'quem é o MENOR lançador'}:
                         </p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '12px 0' }}>
-                            {gameState.pendingBidTieBreak.tiedHouses.map(h => (
-                                <button key={h}
-                                    onClick={() => setGameState(prev => chooseBidTieBreak(prev, h))}
-                                    style={{ ...cardButtonStyle, borderColor: gameState.cas[h]?.color }}>
-                                    <span style={{ color: gameState.cas[h]?.color, fontWeight: 'bold' }}>{h}</span>
-                                    <span style={{ color: '#aaa', marginLeft: '8px' }}>
-                                        (lance: {gameState.pendingBidding?.bids[h] ?? 0})
-                                    </span>
-                                </button>
-                            ))}
-                        </div>
+                        {canAct(gameState.pendingBidTieBreak.decider) ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '12px 0' }}>
+                                {gameState.pendingBidTieBreak.tiedHouses.map(h => (
+                                    <button key={h}
+                                        onClick={() => dispatch({ t: 'tieBreak', house: h })}
+                                        style={{ ...cardButtonStyle, borderColor: gameState.cas[h]?.color }}>
+                                        <span style={{ color: gameState.cas[h]?.color, fontWeight: 'bold' }}>{h}</span>
+                                        <span style={{ color: '#aaa', marginLeft: '8px' }}>
+                                            (lance: {gameState.pendingBidding?.bids[h] ?? 0})
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <div style={{ textAlign: 'center', color: '#aaa' }}>Aguardando {gameState.pendingBidTieBreak.decider}…</div>
+                        )}
                     </div>
                 </div>
             )}
 
             {/* ═══ UNIT SELECTION (casualties, destruction, upgrades) ═══ */}
-            {gameState.pendingUnitSelection && (
+            {gameState.pendingUnitSelection && canAct(gameState.pendingUnitSelection.house) && (
                 <UnitPickerModal
                     key={gameState.pendingUnitSelection.eligibleUnitIds.join(',') + gameState.pendingUnitSelection.purpose}
                     gameState={gameState}
-                    onConfirm={(unitIds) => setGameState(prev => resolveUnitSelection(prev, unitIds))}
+                    onConfirm={(unitIds) => dispatch({ t: 'unitSelection', unitIds })}
                 />
+            )}
+            {gameState.pendingUnitSelection && !canAct(gameState.pendingUnitSelection.house) && (
+                <div style={{ ...modalOverlayStyle, zIndex: 400 }}>
+                    <div style={{ ...modalBoxStyle, textAlign: 'center' }}>
+                        <h3 style={{ color: '#d4af37' }}>⏳ Aguardando {gameState.pendingUnitSelection.house}</h3>
+                        <p style={{ color: '#aaa' }}>{gameState.pendingUnitSelection.prompt}</p>
+                    </div>
+                </div>
             )}
 
             {/* ═══ SUPPLY RECONCILIATION ═══ */}
@@ -522,10 +536,13 @@ function App() {
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '5px' }}>
                                             {gameState.board[v.areaId]?.units.map((u, i) => (
                                                 <button key={u.id}
-                                                    onClick={() => setGameState(prev => resolveReconcileArmy(prev, entry.house, v.areaId, i))}
+                                                    disabled={!canAct(entry.house)}
+                                                    onClick={() => canAct(entry.house) && dispatch({ t: 'reconcile', house: entry.house, areaId: v.areaId, unitIndex: i })}
                                                     style={{
-                                                        padding: '4px 10px', borderRadius: '4px', cursor: 'pointer',
-                                                        background: '#5a2a2a', border: '1px solid #a44', color: 'white', fontSize: '0.85em'
+                                                        padding: '4px 10px', borderRadius: '4px',
+                                                        cursor: canAct(entry.house) ? 'pointer' : 'not-allowed',
+                                                        background: canAct(entry.house) ? '#5a2a2a' : '#333',
+                                                        border: '1px solid #a44', color: canAct(entry.house) ? 'white' : '#777', fontSize: '0.85em'
                                                     }}>
                                                     🗑️ {u.type}
                                                 </button>
@@ -539,27 +556,33 @@ function App() {
                 </div>
             )}
 
-            {/* ═══ MESSENGER RAVEN — PEEK WILDLING CARD ═══ */}
+            {/* ═══ MESSENGER RAVEN — PEEK WILDLING CARD (only the holder sees it) ═══ */}
             {gameState.pendingRavenPeek && (
                 <div style={{ ...modalOverlayStyle, zIndex: 460 }}>
                     <div style={modalBoxStyle}>
                         <h2 style={{ color: '#d4af37', margin: '0 0 10px', textAlign: 'center' }}>🐦 Carta Wildling do topo</h2>
-                        <div style={{ background: '#252535', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
-                            <h3 style={{ margin: '0 0 8px', textAlign: 'center' }}>{gameState.pendingRavenPeek.card.name}</h3>
-                            <p style={{ fontSize: '0.8em', color: '#8f8' }}><strong>Vitória (maior lance):</strong> {gameState.pendingRavenPeek.card.highestBidderText}</p>
-                            <p style={{ fontSize: '0.8em', color: '#f88' }}><strong>Derrota (menor lance):</strong> {gameState.pendingRavenPeek.card.lowestBidderText}</p>
-                            <p style={{ fontSize: '0.8em', color: '#ccc' }}><strong>Demais:</strong> {gameState.pendingRavenPeek.card.everyoneElseText}</p>
-                        </div>
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            <button onClick={() => setGameState(prev => resolveRavenPeek(prev, 'top'))}
-                                style={{ ...actionBtnStyle, background: '#4a4', flex: 1 }}>
-                                Devolver ao topo
-                            </button>
-                            <button onClick={() => setGameState(prev => resolveRavenPeek(prev, 'bottom'))}
-                                style={{ ...actionBtnStyle, background: '#a44', flex: 1 }}>
-                                Enterrar no fundo
-                            </button>
-                        </div>
+                        {canAct(gameState.pendingRavenPeek.holder) ? (<>
+                            <div style={{ background: '#252535', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+                                <h3 style={{ margin: '0 0 8px', textAlign: 'center' }}>{gameState.pendingRavenPeek.card.name}</h3>
+                                <p style={{ fontSize: '0.8em', color: '#8f8' }}><strong>Vitória (maior lance):</strong> {gameState.pendingRavenPeek.card.highestBidderText}</p>
+                                <p style={{ fontSize: '0.8em', color: '#f88' }}><strong>Derrota (menor lance):</strong> {gameState.pendingRavenPeek.card.lowestBidderText}</p>
+                                <p style={{ fontSize: '0.8em', color: '#ccc' }}><strong>Demais:</strong> {gameState.pendingRavenPeek.card.everyoneElseText}</p>
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button onClick={() => dispatch({ t: 'ravenPeek', placement: 'top' })}
+                                    style={{ ...actionBtnStyle, background: '#4a4', flex: 1 }}>
+                                    Devolver ao topo
+                                </button>
+                                <button onClick={() => dispatch({ t: 'ravenPeek', placement: 'bottom' })}
+                                    style={{ ...actionBtnStyle, background: '#a44', flex: 1 }}>
+                                    Enterrar no fundo
+                                </button>
+                            </div>
+                        </>) : (
+                            <div style={{ textAlign: 'center', color: '#aaa' }}>
+                                {gameState.pendingRavenPeek.holder} está espiando o baralho Wildling…
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -574,10 +597,12 @@ function App() {
                     🐦 <strong style={{ color: gameState.cas[gameState.pendingRavenSwap.holder]?.color }}>
                         {gameState.pendingRavenSwap.holder}
                     </strong>: selecione uma área sua e escolha o novo token para trocar a ordem.
-                    <button onClick={() => setGameState(prev => skipRavenSwap(prev))}
-                        style={{ marginLeft: '12px', padding: '3px 10px', background: '#555', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
-                        Cancelar (não usar)
-                    </button>
+                    {canAct(gameState.pendingRavenSwap.holder) && (
+                        <button onClick={() => dispatch({ t: 'skipRavenSwap' })}
+                            style={{ marginLeft: '12px', padding: '3px 10px', background: '#555', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
+                            Cancelar (não usar)
+                        </button>
+                    )}
                 </div>
             )}
 
@@ -592,7 +617,7 @@ function App() {
             )}
 
             {/* ═══ VALYRIAN STEEL BLADE ═══ */}
-            {gameState.combat && !gameState.valyrianSteelBladeUsed && (
+            {gameState.combat && !gameState.valyrianSteelBladeUsed && canAct(bladeHolder) && (
                 (gameState.combat.attacker === bladeHolder || gameState.combat.defender === bladeHolder) && (
                     <div style={{
                         position: 'fixed', bottom: '20px', right: '20px', zIndex: 100,
@@ -616,24 +641,22 @@ function App() {
             {/* ═══ WESTEROS PHASE & WILDLING CARDS ═══ */}
             <WesterosPhase
                 gameState={gameState}
+                myHouses={myHouses}
+                canContinue={isHostOrLocal}
                 onContinue={() => {
-                    if (gameState.currentWildlingCard) {
-                        setGameState(prev => acknowledgeWildlingCard(prev));
-                    } else if (gameState.drawnWesterosCards) {
-                        setGameState(prev => resolveNextWesterosCard(prev));
-                    }
+                    if (!isHostOrLocal) return;
+                    dispatch({ t: 'westerosContinue' });
                 }}
                 onDecision={(action) => {
-                    setGameState(prev => makeDecision(prev, action));
+                    dispatch({ t: 'decision', action });
                 }}
             />
 
             {/* ═══ COMBAT UI ═══ */}
             <CombatUI
                 gameState={gameState}
-                onCardSelect={(house, cardId) => {
-                    setGameState(prev => selectHouseCard(prev, house, cardId));
-                }}
+                myHouses={myHouses}
+                onCardSelect={handleCardSelect}
                 onResolveCombat={handleResolveCombat}
             />
 
@@ -651,20 +674,28 @@ function App() {
                             <p style={{ textAlign: 'center', color: '#aaa', fontSize: '0.85em' }}>
                                 Combat: <strong style={{ color: gameState.cas[pending.attacker]?.color }}>{pending.attacker}</strong> vs <strong style={{ color: gameState.cas[pending.defender]?.color }}>{pending.defender}</strong> in {gameState.board[pending.combatAreaId]?.name}
                             </p>
-                            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '15px' }}>
-                                <button onClick={() => setGameState(prev => declareSupportChoice(prev, current.areaId, 'attacker'))}
-                                    style={{ ...actionBtnStyle, background: gameState.cas[pending.attacker]?.color || '#d44' }}>
-                                    Support {pending.attacker}
-                                </button>
-                                <button onClick={() => setGameState(prev => declareSupportChoice(prev, current.areaId, 'defender'))}
-                                    style={{ ...actionBtnStyle, background: gameState.cas[pending.defender]?.color || '#44d' }}>
-                                    Support {pending.defender}
-                                </button>
-                                <button onClick={() => setGameState(prev => declareSupportChoice(prev, current.areaId, 'none'))}
-                                    style={{ ...actionBtnStyle, background: '#555' }}>
-                                    Refuse
-                                </button>
-                            </div>
+                            {canAct(current.house) ? (
+                                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '15px' }}>
+                                    {current.house !== pending.defender && (
+                                        <button onClick={() => dispatch({ t: 'declareSupport', areaId: current.areaId, choice: 'attacker' })}
+                                            style={{ ...actionBtnStyle, background: gameState.cas[pending.attacker]?.color || '#d44' }}>
+                                            Support {pending.attacker}
+                                        </button>
+                                    )}
+                                    {current.house !== pending.attacker && (
+                                        <button onClick={() => dispatch({ t: 'declareSupport', areaId: current.areaId, choice: 'defender' })}
+                                            style={{ ...actionBtnStyle, background: gameState.cas[pending.defender]?.color || '#44d' }}>
+                                            Support {pending.defender}
+                                        </button>
+                                    )}
+                                    <button onClick={() => dispatch({ t: 'declareSupport', areaId: current.areaId, choice: 'none' })}
+                                        style={{ ...actionBtnStyle, background: '#555' }}>
+                                        Refuse
+                                    </button>
+                                </div>
+                            ) : (
+                                <div style={{ textAlign: 'center', color: '#aaa', marginTop: '15px' }}>Aguardando {current.house}…</div>
+                            )}
                         </div>
                     </div>
                 );
@@ -682,22 +713,26 @@ function App() {
                                 <strong style={{ color: gameState.cas[house]?.color }}>{house}</strong> may pay <strong style={{ color: '#fd6' }}>2 Power</strong> to discard Aeron and play a different card.
                             </p>
                             <p style={{ textAlign: 'center', color: '#888', fontSize: '0.85em' }}>Current power: {gameState.cas[house].power}</p>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '12px 0' }}>
-                                {otherCards.map(card => (
-                                    <button key={card.id}
-                                        onClick={() => setGameState(prev => resolveAeronSwap(prev, card.id))}
-                                        style={{ ...cardButtonStyle, borderColor: '#6af' }}>
-                                        <span style={{ fontWeight: 'bold' }}>{card.name}</span>
-                                        <span style={{ color: '#d4af37', marginLeft: '8px' }}>Str: {card.strength}</span>
-                                        {card.swords ? <span style={{ marginLeft: '6px' }}>🗡️×{card.swords}</span> : null}
-                                        {card.fortifications ? <span style={{ marginLeft: '6px' }}>🛡️×{card.fortifications}</span> : null}
-                                    </button>
-                                ))}
-                            </div>
-                            <button onClick={() => setGameState(prev => resolveAeronSwap(prev, null))}
-                                style={{ ...actionBtnStyle, background: '#555', width: '100%' }}>
-                                Decline (keep Aeron)
-                            </button>
+                            {canAct(house) ? (<>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '12px 0' }}>
+                                    {otherCards.map(card => (
+                                        <button key={card.id}
+                                            onClick={() => dispatch({ t: 'aeronSwap', cardId: card.id })}
+                                            style={{ ...cardButtonStyle, borderColor: '#6af' }}>
+                                            <span style={{ fontWeight: 'bold' }}>{card.name}</span>
+                                            <span style={{ color: '#d4af37', marginLeft: '8px' }}>Str: {card.strength}</span>
+                                            {card.swords ? <span style={{ marginLeft: '6px' }}>🗡️×{card.swords}</span> : null}
+                                            {card.fortifications ? <span style={{ marginLeft: '6px' }}>🛡️×{card.fortifications}</span> : null}
+                                        </button>
+                                    ))}
+                                </div>
+                                <button onClick={() => dispatch({ t: 'aeronSwap', cardId: null })}
+                                    style={{ ...actionBtnStyle, background: '#555', width: '100%' }}>
+                                    Decline (keep Aeron)
+                                </button>
+                            </>) : (
+                                <div style={{ textAlign: 'center', color: '#aaa' }}>Aguardando {house}…</div>
+                            )}
                         </div>
                     </div>
                 );
@@ -719,23 +754,27 @@ function App() {
                                 <strong style={{ color: gameState.cas[opponent]?.color }}>{opponent}</strong>'s <strong>{cancelledCard?.name}</strong> is cancelled.
                                 Choose a replacement card:
                             </p>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '12px 0' }}>
-                                {otherCards.map(card => (
-                                    <button key={card.id}
-                                        onClick={() => setGameState(prev => resolveTyrionCancel(prev, card.id))}
-                                        style={{ ...cardButtonStyle, borderColor: '#c4a' }}>
-                                        <span style={{ fontWeight: 'bold' }}>{card.name}</span>
-                                        <span style={{ color: '#d4af37', marginLeft: '8px' }}>Str: {card.strength}</span>
-                                        {card.swords ? <span style={{ marginLeft: '6px' }}>🗡️×{card.swords}</span> : null}
-                                        {card.fortifications ? <span style={{ marginLeft: '6px' }}>🛡️×{card.fortifications}</span> : null}
+                            {canAct(opponent) ? (<>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '12px 0' }}>
+                                    {otherCards.map(card => (
+                                        <button key={card.id}
+                                            onClick={() => dispatch({ t: 'tyrionPick', cardId: card.id })}
+                                            style={{ ...cardButtonStyle, borderColor: '#c4a' }}>
+                                            <span style={{ fontWeight: 'bold' }}>{card.name}</span>
+                                            <span style={{ color: '#d4af37', marginLeft: '8px' }}>Str: {card.strength}</span>
+                                            {card.swords ? <span style={{ marginLeft: '6px' }}>🗡️×{card.swords}</span> : null}
+                                            {card.fortifications ? <span style={{ marginLeft: '6px' }}>🛡️×{card.fortifications}</span> : null}
+                                        </button>
+                                    ))}
+                                </div>
+                                {otherCards.length === 0 && (
+                                    <button onClick={() => dispatch({ t: 'tyrionPick', cardId: null })}
+                                        style={{ ...actionBtnStyle, background: '#555', width: '100%' }}>
+                                        No other cards — continue
                                     </button>
-                                ))}
-                            </div>
-                            {otherCards.length === 0 && (
-                                <button onClick={() => setGameState(prev => resolveTyrionCancel(prev, null))}
-                                    style={{ ...actionBtnStyle, background: '#555', width: '100%' }}>
-                                    No other cards — continue
-                                </button>
+                                )}
+                            </>) : (
+                                <div style={{ textAlign: 'center', color: '#aaa' }}>Aguardando {opponent}…</div>
                             )}
                         </div>
                     </div>
@@ -752,21 +791,25 @@ function App() {
                             <p style={{ textAlign: 'center', color: '#ccc' }}>
                                 <strong style={{ color: gameState.cas[baratheonPlayer]?.color }}>{baratheonPlayer}</strong> may view and discard one of <strong style={{ color: gameState.cas[opponent]?.color }}>{opponent}</strong>'s cards:
                             </p>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '12px 0' }}>
-                                {opponentCards.map(card => (
-                                    <button key={card.id}
-                                        onClick={() => setGameState(prev => resolvePatchfaceDiscard(prev, card.id))}
-                                        style={{ ...cardButtonStyle, borderColor: '#f8a' }}>
-                                        <span style={{ fontWeight: 'bold' }}>{card.name}</span>
-                                        <span style={{ color: '#d4af37', marginLeft: '8px' }}>Str: {card.strength}</span>
-                                        {card.text && <div style={{ fontSize: '0.7em', color: '#888', fontStyle: 'italic', marginTop: '3px' }}>{card.text}</div>}
-                                    </button>
-                                ))}
-                            </div>
-                            <button onClick={() => setGameState(prev => resolvePatchfaceDiscard(prev, null))}
-                                style={{ ...actionBtnStyle, background: '#555', width: '100%' }}>
-                                Decline (discard nothing)
-                            </button>
+                            {canAct(baratheonPlayer) ? (<>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '12px 0' }}>
+                                    {opponentCards.map(card => (
+                                        <button key={card.id}
+                                            onClick={() => dispatch({ t: 'patchface', cardId: card.id })}
+                                            style={{ ...cardButtonStyle, borderColor: '#f8a' }}>
+                                            <span style={{ fontWeight: 'bold' }}>{card.name}</span>
+                                            <span style={{ color: '#d4af37', marginLeft: '8px' }}>Str: {card.strength}</span>
+                                            {card.text && <div style={{ fontSize: '0.7em', color: '#888', fontStyle: 'italic', marginTop: '3px' }}>{card.text}</div>}
+                                        </button>
+                                    ))}
+                                </div>
+                                <button onClick={() => dispatch({ t: 'patchface', cardId: null })}
+                                    style={{ ...actionBtnStyle, background: '#555', width: '100%' }}>
+                                    Decline (discard nothing)
+                                </button>
+                            </>) : (
+                                <div style={{ textAlign: 'center', color: '#aaa' }}>Aguardando {baratheonPlayer}…</div>
+                            )}
                         </div>
                     </div>
                 );
@@ -782,20 +825,24 @@ function App() {
                             <p style={{ textAlign: 'center', color: '#ccc' }}>
                                 <strong style={{ color: gameState.cas[robbPlayer]?.color }}>{robbPlayer}</strong> chooses where <strong style={{ color: gameState.cas[retreatingHouse]?.color }}>{retreatingHouse}</strong>'s defeated units retreat:
                             </p>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '12px 0' }}>
-                                {possibleAreas.map(areaId => (
-                                    <button key={areaId}
-                                        onClick={() => setGameState(prev => resolveRobbRetreat(prev, areaId))}
-                                        style={{ ...cardButtonStyle, borderColor: '#6c6' }}>
-                                        {gameState.board[areaId]?.name || areaId}
-                                        {gameState.pendingRobbRetreat?.lossByArea?.[areaId] ? (
-                                            <span style={{ color: '#f88', marginLeft: '8px', fontSize: '0.8em' }}>
-                                                (-{gameState.pendingRobbRetreat.lossByArea[areaId]} por suprimento)
-                                            </span>
-                                        ) : null}
-                                    </button>
-                                ))}
-                            </div>
+                            {canAct(robbPlayer) ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '12px 0' }}>
+                                    {possibleAreas.map(areaId => (
+                                        <button key={areaId}
+                                            onClick={() => dispatch({ t: 'robbRetreat', areaId })}
+                                            style={{ ...cardButtonStyle, borderColor: '#6c6' }}>
+                                            {gameState.board[areaId]?.name || areaId}
+                                            {gameState.pendingRobbRetreat?.lossByArea?.[areaId] ? (
+                                                <span style={{ color: '#f88', marginLeft: '8px', fontSize: '0.8em' }}>
+                                                    (-{gameState.pendingRobbRetreat.lossByArea[areaId]} por suprimento)
+                                                </span>
+                                            ) : null}
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div style={{ textAlign: 'center', color: '#aaa' }}>Aguardando {robbPlayer}…</div>
+                            )}
                         </div>
                     </div>
                 );
@@ -805,7 +852,8 @@ function App() {
             <RetreatModal
                 gameState={gameState}
                 onResolve={(areaId) => {
-                    setGameState(prev => resolveRetreat(prev, areaId));
+                    if (!canAct(gameState.pendingRetreat?.house)) return;
+                    dispatch({ t: 'retreat', areaId });
                 }}
             />
 
@@ -877,7 +925,7 @@ function App() {
                     {interaction.type === 'RAID_SELECT_TO' && (
                         <button onClick={() => {
                             const fromId = interaction.fromAreaId;
-                            setGameState(prev => advanceActionTurn(resolveRaidNoEffect(prev, fromId)));
+                            dispatch({ t: 'raidNoEffect', fromAreaId: fromId });
                             setInteraction({ type: 'NONE' });
                         }}
                             style={{ marginLeft: '15px', padding: '3px 10px', background: '#888', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
@@ -897,7 +945,12 @@ function App() {
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid #2a3a5a', paddingBottom: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <h1 style={{ margin: 0, fontSize: '1.2em', color: '#d4af37' }}>⚔️ Game of Thrones</h1>
-                    <button onClick={handleNewGame} style={{ padding: '3px 8px', background: '#333', color: '#999', border: '1px solid #555', borderRadius: '3px', cursor: 'pointer', fontSize: '0.7em' }}>New Game</button>
+                    {net && (
+                        <span style={{ fontSize: '0.7em', color: '#9cf', border: '1px solid #3a5a7a', borderRadius: '4px', padding: '2px 6px' }}>
+                            🌐 Sala {net.roomCode} — você: {myHouses && myHouses.length > 0 ? myHouses.join(', ') : 'espectador'}{net.isHost ? ' (host)' : ''}
+                        </span>
+                    )}
+                    <button onClick={handleNewGame} style={{ padding: '3px 8px', background: '#333', color: '#999', border: '1px solid #555', borderRadius: '3px', cursor: 'pointer', fontSize: '0.7em' }}>{net ? 'Sair da sala' : 'New Game'}</button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     {gameState.orderRestrictions && (
@@ -930,7 +983,7 @@ function App() {
 
                 {/* CENTER: Map */}
                 <div style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 80px)' }}>
-                    <GameBoard gameState={gameState} onAreaClick={handleAreaClick} selectedArea={selectedArea} />
+                    <GameBoard gameState={gameState} onAreaClick={handleAreaClick} selectedArea={selectedArea} concealOrdersOf={concealOrdersOf} />
                 </div>
 
                 {/* RIGHT: Area Details */}
@@ -1022,7 +1075,12 @@ function App() {
                                     </div>
                                 )}
 
-                                {area.order && (
+                                {area.order && concealOrdersOf.includes(area.order.house) && (
+                                    <div style={{ marginTop: '8px', color: '#889' }}>
+                                        <strong>Order:</strong> 🎴 oculta
+                                    </div>
+                                )}
+                                {area.order && !concealOrdersOf.includes(area.order.house) && (
                                     <div style={{ marginTop: '8px', color: 'gold' }}>
                                         <strong>Order:</strong> {area.order.type}
                                         {area.order.star && <span style={{ color: 'yellow' }}> ★</span>}
@@ -1031,17 +1089,17 @@ function App() {
                                                 {' '}({area.order.strength > 0 ? '+' : ''}{area.order.strength})
                                             </span>
                                         )}
-                                        {gameState.phase === 'Action' && area.order.type === 'March' && area.house === gameState.currentPlayerHouse && gameState.actionSubPhase === 'March' && (
+                                        {gameState.phase === 'Action' && area.order.type === 'March' && area.house === gameState.currentPlayerHouse && gameState.actionSubPhase === 'March' && canAct(gameState.currentPlayerHouse) && (
                                             <div style={{ marginTop: '5px' }}>
                                                 <button onClick={handleExecuteMarch} style={actionBtnStyle}>Execute March</button>
                                             </div>
                                         )}
-                                        {gameState.phase === 'Action' && area.order.type === 'Raid' && area.house === gameState.currentPlayerHouse && gameState.actionSubPhase === 'Raid' && (
+                                        {gameState.phase === 'Action' && area.order.type === 'Raid' && area.house === gameState.currentPlayerHouse && gameState.actionSubPhase === 'Raid' && canAct(gameState.currentPlayerHouse) && (
                                             <div style={{ marginTop: '5px' }}>
                                                 <button onClick={handleExecuteRaid} style={actionBtnStyle}>Execute Raid</button>
                                             </div>
                                         )}
-                                        {gameState.phase === 'Action' && area.order.type === 'ConsolidatePower' && area.order.star && area.house === gameState.currentPlayerHouse && gameState.actionSubPhase === 'ConsolidatePower' && (area.castle || area.stronghold) && (
+                                        {gameState.phase === 'Action' && area.order.type === 'ConsolidatePower' && area.order.star && area.house === gameState.currentPlayerHouse && gameState.actionSubPhase === 'ConsolidatePower' && (area.castle || area.stronghold) && canAct(gameState.currentPlayerHouse) && (
                                             <div style={{ marginTop: '5px' }}>
                                                 <button onClick={() => handleCPStarMuster(selectedArea!)} style={{ ...actionBtnStyle, background: '#d4af37', color: 'black' }}>🏗️ CP★ Muster</button>
                                             </div>
@@ -1050,7 +1108,7 @@ function App() {
                                 )}
 
                                 {/* Order Token Placement */}
-                                {gameState.phase === 'Planning' && area.house && area.units.length > 0 && (
+                                {gameState.phase === 'Planning' && area.house && area.units.length > 0 && canAct(area.house) && (
                                     <div style={{ marginTop: '12px', borderTop: '1px solid #555', paddingTop: '8px' }}>
                                         <strong>Place Order:</strong>
                                         <div style={{ fontSize: '0.7em', color: '#aaa', marginBottom: '4px' }}>

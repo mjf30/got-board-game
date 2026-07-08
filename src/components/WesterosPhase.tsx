@@ -1,14 +1,18 @@
 import React from 'react';
-import { GameState } from '../game/types';
+import { GameState, HouseName } from '../game/types';
 import { WESTEROS_DECK_1, WESTEROS_DECK_2, WESTEROS_DECK_3 } from '../game/constants/westerosCards';
 
 interface WesterosPhaseProps {
     gameState: GameState;
     onContinue: () => void;
     onDecision: (action: string) => void;
+    /** Online: houses this client controls (null = local hot-seat) */
+    myHouses?: HouseName[] | null;
+    /** Online: whether this client may advance shared steps (host) */
+    canContinue?: boolean;
 }
 
-export const WesterosPhase: React.FC<WesterosPhaseProps> = ({ gameState, onContinue, onDecision }) => {
+export const WesterosPhase: React.FC<WesterosPhaseProps> = ({ gameState, onContinue, onDecision, myHouses, canContinue = true }) => {
     // Current step is derived from Game Engine State now
     const currentStep = gameState.westerosActionIndex ?? 0;
 
@@ -39,24 +43,28 @@ export const WesterosPhase: React.FC<WesterosPhaseProps> = ({ gameState, onConti
                     <p style={{ fontSize: '1.2em' }}>
                         <strong>{chooser}</strong> must choose:
                     </p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' }}>
-                        {options.map((opt, i) => (
-                            <button
-                                key={i}
-                                onClick={() => onDecision(opt.action)}
-                                style={{
-                                    padding: '12px 20px', fontSize: '18px', cursor: 'pointer',
-                                    backgroundColor: '#444', border: '1px solid #666', borderRadius: '4px',
-                                    color: 'white', transition: 'background 0.2s',
-                                    fontWeight: 'bold'
-                                }}
-                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#666'}
-                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#444'}
-                            >
-                                {opt.label}
-                            </button>
-                        ))}
-                    </div>
+                    {(!myHouses || myHouses.includes(chooser)) ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' }}>
+                            {options.map((opt, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => onDecision(opt.action)}
+                                    style={{
+                                        padding: '12px 20px', fontSize: '18px', cursor: 'pointer',
+                                        backgroundColor: '#444', border: '1px solid #666', borderRadius: '4px',
+                                        color: 'white', transition: 'background 0.2s',
+                                        fontWeight: 'bold'
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#666'}
+                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#444'}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                    ) : (
+                        <div style={{ color: '#aaa', marginTop: '20px' }}>⏳ Aguardando {chooser}…</div>
+                    )}
                 </div>
             </div>
         );
@@ -91,12 +99,16 @@ export const WesterosPhase: React.FC<WesterosPhaseProps> = ({ gameState, onConti
                         {gameState.currentWildlingCard.everyoneElseText}
                     </div>
                 </div>
-                <button
-                    onClick={onContinue}
-                    style={{ marginTop: '20px', padding: '10px 20px', fontSize: '18px', cursor: 'pointer' }}
-                >
-                    Continue
-                </button>
+                {canContinue ? (
+                    <button
+                        onClick={onContinue}
+                        style={{ marginTop: '20px', padding: '10px 20px', fontSize: '18px', cursor: 'pointer' }}
+                    >
+                        Continue
+                    </button>
+                ) : (
+                    <div style={{ marginTop: '20px', color: '#aaa' }}>⏳ Aguardando o host…</div>
+                )}
             </div>
         );
     }
@@ -119,16 +131,20 @@ export const WesterosPhase: React.FC<WesterosPhaseProps> = ({ gameState, onConti
                     color: 'white'
                 }}>
                     <h2>Westeros Phase Complete</h2>
-                    <button
-                        onClick={onContinue}
-                        style={{
-                            padding: '12px 30px', fontSize: '18px', cursor: 'pointer',
-                            backgroundColor: '#d4af37', border: 'none', borderRadius: '6px',
-                            fontWeight: 'bold', color: '#1a1a1a'
-                        }}
-                    >
-                        Finish Phase
-                    </button>
+                    {canContinue ? (
+                        <button
+                            onClick={onContinue}
+                            style={{
+                                padding: '12px 30px', fontSize: '18px', cursor: 'pointer',
+                                backgroundColor: '#d4af37', border: 'none', borderRadius: '6px',
+                                fontWeight: 'bold', color: '#1a1a1a'
+                            }}
+                        >
+                            Finish Phase
+                        </button>
+                    ) : (
+                        <div style={{ color: '#aaa' }}>⏳ Aguardando o host…</div>
+                    )}
                 </div>
             );
         }
@@ -185,17 +201,21 @@ export const WesterosPhase: React.FC<WesterosPhaseProps> = ({ gameState, onConti
                     </div>
                 </div>
 
-                <button
-                    onClick={onContinue}
-                    style={{
-                        padding: '12px 30px', fontSize: '18px', cursor: 'pointer',
-                        backgroundColor: '#d4af37', border: 'none', borderRadius: '6px',
-                        fontWeight: 'bold', color: '#1a1a1a',
-                        boxShadow: '0 4px 10px rgba(212, 175, 55, 0.4)'
-                    }}
-                >
-                    Resolve Card Effect
-                </button>
+                {canContinue ? (
+                    <button
+                        onClick={onContinue}
+                        style={{
+                            padding: '12px 30px', fontSize: '18px', cursor: 'pointer',
+                            backgroundColor: '#d4af37', border: 'none', borderRadius: '6px',
+                            fontWeight: 'bold', color: '#1a1a1a',
+                            boxShadow: '0 4px 10px rgba(212, 175, 55, 0.4)'
+                        }}
+                    >
+                        Resolve Card Effect
+                    </button>
+                ) : (
+                    <div style={{ color: '#aaa' }}>⏳ Aguardando o host…</div>
+                )}
             </div>
         );
     }
