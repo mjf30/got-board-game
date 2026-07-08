@@ -2,21 +2,24 @@ import { useState } from 'react'
 import { createInitialGameState } from './game/setup'
 import {
     resolvePhase, placeOrder, resolveMarch, finishMarch,
-    resolveRaid, resolveConsolidatePower, checkVictory,
+    resolveRaid, resolveRaidNoEffect, resolveConsolidatePower,
     leavePowerToken, declinePowerToken,
     advanceActionTurn, useValyrianSteelBlade, useMessengerRaven,
-    musterUnit, skipMustering, skipAllMustering, upgradeFootmanToKnight,
-    resolveRetreat, submitBid, resolveBids,
+    musterUnit, skipMustering, skipAllMustering, upgradeFootman,
+    resolveRetreat, submitBid, resolveBids, chooseBidTieBreak, biddingParticipants,
     resolveGameOfThrones, triggerCPStarMustering,
-    getPortForArea, moveShipFromPort,
-    acknowledgeWesterosCards, acknowledgeWildlingCard,
-    resolveNextWesterosCard, makeDecision
+    getPortForArea,
+    acknowledgeWildlingCard,
+    resolveNextWesterosCard, makeDecision,
+    resolveUnitSelection, resolveReconcileArmy,
+    resolveRavenPeek, skipRavenSwap
 } from './game/engine'
 import {
     selectHouseCard, resolveCombat,
     declareSupportChoice, resolveAeronSwap, resolveTyrionCancel,
     resolvePatchfaceDiscard, resolveRobbRetreat
 } from './game/combat'
+import { UnitPickerModal } from './components/UnitPickerModal'
 import { GameBoard } from './components/GameBoard'
 import { CombatUI } from './components/CombatUI'
 import { SetupScreen } from './components/SetupScreen'
@@ -67,12 +70,14 @@ function App() {
 
     // ─── Area Click Handler ────────────────────────
     const handleAreaClick = (areaId: string) => {
-        if (gameState.winner || gameState.pendingPowerTokenArea || gameState.pendingMustering) return;
+        if (gameState.winner || gameState.pendingPowerTokenArea || gameState.pendingMustering ||
+            gameState.pendingUnitSelection || gameState.pendingBidTieBreak ||
+            gameState.pendingReconcile || gameState.pendingRavenPeek) return;
 
         // Retreat destination selection
         if (interaction.type === 'RETREAT_SELECT_TO' && gameState.pendingRetreat) {
             if (gameState.pendingRetreat.possibleAreas.includes(areaId)) {
-                setGameState(prev => advanceActionTurn(resolveRetreat(prev, areaId)));
+                setGameState(prev => resolveRetreat(prev, areaId));
                 setInteraction({ type: 'NONE' });
             }
             return;
@@ -121,7 +126,10 @@ function App() {
 
     // ─── Phase Advance ─────────────────────────────
     const handlePhaseAdvance = () => {
-        if (gameState.winner || gameState.pendingPowerTokenArea || gameState.pendingMustering || gameState.pendingRetreat) return;
+        if (gameState.winner || gameState.pendingPowerTokenArea || gameState.pendingMustering ||
+            gameState.pendingRetreat || gameState.pendingUnitSelection || gameState.pendingDecision ||
+            gameState.pendingBidTieBreak || gameState.pendingReconcile ||
+            gameState.pendingRavenPeek || gameState.pendingRavenSwap) return;
         if (gameState.phase === 'Action') {
             if (gameState.actionSubPhase === 'Done') {
                 setGameState(prev => {
@@ -149,6 +157,11 @@ function App() {
         if (!selectedArea) return;
         const area = gameState.board[selectedArea];
         if (!area.house) return;
+        // During the Messenger Raven step, placing a token means swapping via the raven
+        if (gameState.pendingRavenSwap) {
+            setGameState(prev => useMessengerRaven(prev, selectedArea, tokenIndex));
+            return;
+        }
         setGameState(prev => placeOrder(prev, selectedArea, area.house!, tokenIndex));
     };
 
@@ -190,15 +203,11 @@ function App() {
 
     const handleResolveCombat = () => {
         setGameState(prev => {
-            if (!prev.combat?.attackerCard || !prev.combat?.defenderCard) return prev;
-            let resolved = resolveCombat(prev);
-            // Don't advance turn if any interactive combat sub-state is pending
-            if (!resolved.pendingRetreat && !resolved.combat &&
-                !resolved.pendingAeronSwap && !resolved.pendingTyrionCancel &&
-                !resolved.pendingPatchface && !resolved.pendingRobbRetreat) {
-                resolved = advanceActionTurn(resolved);
-            }
-            return resolved;
+            const c = prev.combat;
+            if (!c) return prev;
+            if ((!c.attackerCard && !c.attackerNoCard) || (!c.defenderCard && !c.defenderNoCard)) return prev;
+            // The combat pipeline advances the turn itself when it finishes
+            return resolveCombat(prev);
         });
     };
 
@@ -346,23 +355,41 @@ function App() {
                                             </button>
                                         );
                                     })}
-                                    {/* Upgrade Footman → Knight (1 muster point) */}
+                                    {/* Upgrade Footman → Knight / Siege Engine (1 muster point each) */}
                                     {gameState.board[m.areaId].units.filter(u => u.type === 'Footman' && u.house === m.house).length > 0 &&
-                                     m.pointsRemaining >= 1 &&
-                                     gameState.cas[m.house].availableUnits.Knight > 0 && (
-                                        <button
-                                            onClick={() => {
-                                                const footman = gameState.board[m.areaId].units.find(u => u.type === 'Footman' && u.house === m.house);
-                                                if (footman) setGameState(prev => upgradeFootmanToKnight(prev, m.areaId, footman.id));
-                                            }}
-                                            style={{
-                                                padding: '4px 8px', fontSize: '0.8em',
-                                                background: '#a86f32', color: 'white',
-                                                border: '1px solid #c9873c', borderRadius: '3px',
-                                                cursor: 'pointer'
-                                            }}>
-                                            ⬆ Upgrade (1pt)
-                                        </button>
+                                     m.pointsRemaining >= 1 && (
+                                        <>
+                                            {gameState.cas[m.house].availableUnits.Knight > 0 && (
+                                                <button
+                                                    onClick={() => {
+                                                        const footman = gameState.board[m.areaId].units.find(u => u.type === 'Footman' && u.house === m.house);
+                                                        if (footman) setGameState(prev => upgradeFootman(prev, m.areaId, footman.id, 'Knight'));
+                                                    }}
+                                                    style={{
+                                                        padding: '4px 8px', fontSize: '0.8em',
+                                                        background: '#a86f32', color: 'white',
+                                                        border: '1px solid #c9873c', borderRadius: '3px',
+                                                        cursor: 'pointer'
+                                                    }}>
+                                                    ⬆ Knight (1pt)
+                                                </button>
+                                            )}
+                                            {gameState.cas[m.house].availableUnits.SiegeEngine > 0 && (
+                                                <button
+                                                    onClick={() => {
+                                                        const footman = gameState.board[m.areaId].units.find(u => u.type === 'Footman' && u.house === m.house);
+                                                        if (footman) setGameState(prev => upgradeFootman(prev, m.areaId, footman.id, 'SiegeEngine'));
+                                                    }}
+                                                    style={{
+                                                        padding: '4px 8px', fontSize: '0.8em',
+                                                        background: '#6f5a32', color: 'white',
+                                                        border: '1px solid #9c823c', borderRadius: '3px',
+                                                        cursor: 'pointer'
+                                                    }}>
+                                                    ⬆ Cerco (1pt)
+                                                </button>
+                                            )}
+                                        </>
                                     )}
                                     <button onClick={() => handleSkipMustering(m.areaId)}
                                         style={{ padding: '4px 8px', fontSize: '0.8em', background: '#555', color: '#ddd', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
@@ -389,15 +416,18 @@ function App() {
                     <div style={{ background: '#2a2a2a', padding: '25px', borderRadius: '10px', border: '2px solid #d4af37', maxWidth: '550px', maxHeight: '80vh', overflow: 'auto' }}>
                         <h3 style={{ color: '#d4af37', margin: '0 0 5px' }}>
                             {gameState.pendingBidding.type === 'wildling'
-                                ? `🐺 Wildling Attack! (Threat: ${gameState.wildlingThreat})`
+                                ? `🐺 Wildling Attack! (Força: ${gameState.pendingBidding.strengthOverride ?? gameState.wildlingThreat})`
                                 : `👑 Clash of Kings: ${gameState.pendingBidding.currentTrack === 'ironThrone' ? 'Iron Throne' : gameState.pendingBidding.currentTrack === 'fiefdoms' ? 'Fiefdoms' : "King's Court"}`}
                         </h3>
                         <p style={{ fontSize: '0.85em', color: '#aaa', margin: '0 0 12px' }}>
                             {gameState.pendingBidding.type === 'wildling'
-                                ? 'All houses must bid Power tokens to defend. Total bid must exceed Wildling Threat!'
+                                ? 'Todos lançam Power tokens. A soma deve IGUALAR ou exceder a força Wildling.'
                                 : 'Each house bids Power tokens. Highest bidder gets position #1.'}
+                            {gameState.pendingBidding.excludedHouses?.length ? (
+                                <span style={{ color: '#f88' }}> (Não participa: {gameState.pendingBidding.excludedHouses.join(', ')})</span>
+                            ) : null}
                         </p>
-                        {gameState.turnOrder.map(house => {
+                        {biddingParticipants(gameState).map(house => {
                             const hasBid = gameState.pendingBidding!.bids[house] !== undefined;
                             return (
                                 <div key={house} style={{
@@ -425,7 +455,7 @@ function App() {
                                 </div>
                             );
                         })}
-                        {gameState.turnOrder.every(h => gameState.pendingBidding!.bids[h] !== undefined) && (
+                        {biddingParticipants(gameState).every(h => gameState.pendingBidding!.bids[h] !== undefined) && (
                             <button onClick={handleResolveBids}
                                 style={{ marginTop: '10px', padding: '8px 20px', background: '#d4af37', color: 'black', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}>
                                 Resolve Bids
@@ -435,7 +465,131 @@ function App() {
                 </div>
             )}
 
-            {/* ═══ COMBAT MODAL (removed duplicate — rendered below) ═══ */}
+            {/* ═══ BID TIE-BREAK (Iron Throne holder decides) ═══ */}
+            {gameState.pendingBidTieBreak && (
+                <div style={{ ...modalOverlayStyle, zIndex: 460 }}>
+                    <div style={modalBoxStyle}>
+                        <h2 style={{ color: '#d4af37', margin: '0 0 10px', textAlign: 'center' }}>👑 Empate no lance</h2>
+                        <p style={{ textAlign: 'center', color: '#ccc' }}>
+                            <strong style={{ color: gameState.cas[gameState.pendingBidTieBreak.decider]?.color }}>
+                                {gameState.pendingBidTieBreak.decider}
+                            </strong> (Trono de Ferro) decide{' '}
+                            {gameState.pendingBidTieBreak.kind === 'track' ? 'quem fica com a melhor posição' :
+                             gameState.pendingBidTieBreak.kind === 'wildling-high' ? 'quem é o MAIOR lançador' :
+                             'quem é o MENOR lançador'}:
+                        </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '12px 0' }}>
+                            {gameState.pendingBidTieBreak.tiedHouses.map(h => (
+                                <button key={h}
+                                    onClick={() => setGameState(prev => chooseBidTieBreak(prev, h))}
+                                    style={{ ...cardButtonStyle, borderColor: gameState.cas[h]?.color }}>
+                                    <span style={{ color: gameState.cas[h]?.color, fontWeight: 'bold' }}>{h}</span>
+                                    <span style={{ color: '#aaa', marginLeft: '8px' }}>
+                                        (lance: {gameState.pendingBidding?.bids[h] ?? 0})
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ═══ UNIT SELECTION (casualties, destruction, upgrades) ═══ */}
+            {gameState.pendingUnitSelection && (
+                <UnitPickerModal
+                    key={gameState.pendingUnitSelection.eligibleUnitIds.join(',') + gameState.pendingUnitSelection.purpose}
+                    gameState={gameState}
+                    onConfirm={(unitIds) => setGameState(prev => resolveUnitSelection(prev, unitIds))}
+                />
+            )}
+
+            {/* ═══ SUPPLY RECONCILIATION ═══ */}
+            {gameState.pendingReconcile && gameState.pendingReconcile.length > 0 && !gameState.pendingUnitSelection && (
+                <div style={{ ...modalOverlayStyle, zIndex: 380 }}>
+                    <div style={{ ...modalBoxStyle, maxWidth: '560px', maxHeight: '80vh', overflow: 'auto' }}>
+                        <h2 style={{ color: '#d4af37', margin: '0 0 10px', textAlign: 'center' }}>📦 Reconciliar Exércitos</h2>
+                        <p style={{ textAlign: 'center', color: '#ccc', fontSize: '0.9em' }}>
+                            Os exércitos abaixo excedem o limite de suprimento. Clique nas unidades para destruí-las.
+                        </p>
+                        {gameState.pendingReconcile.map(entry => (
+                            <div key={entry.house} style={{ marginBottom: '12px' }}>
+                                <div style={{ color: gameState.cas[entry.house]?.color, fontWeight: 'bold' }}>{entry.house}</div>
+                                {entry.violations.map(v => (
+                                    <div key={v.areaId} style={{ background: '#252535', padding: '8px 10px', borderRadius: '6px', marginTop: '6px' }}>
+                                        <div style={{ color: '#aaa', fontSize: '0.85em' }}>
+                                            {gameState.board[v.areaId]?.name}: {v.currentSize} unidades (máx {v.maxAllowed})
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '5px' }}>
+                                            {gameState.board[v.areaId]?.units.map((u, i) => (
+                                                <button key={u.id}
+                                                    onClick={() => setGameState(prev => resolveReconcileArmy(prev, entry.house, v.areaId, i))}
+                                                    style={{
+                                                        padding: '4px 10px', borderRadius: '4px', cursor: 'pointer',
+                                                        background: '#5a2a2a', border: '1px solid #a44', color: 'white', fontSize: '0.85em'
+                                                    }}>
+                                                    🗑️ {u.type}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ═══ MESSENGER RAVEN — PEEK WILDLING CARD ═══ */}
+            {gameState.pendingRavenPeek && (
+                <div style={{ ...modalOverlayStyle, zIndex: 460 }}>
+                    <div style={modalBoxStyle}>
+                        <h2 style={{ color: '#d4af37', margin: '0 0 10px', textAlign: 'center' }}>🐦 Carta Wildling do topo</h2>
+                        <div style={{ background: '#252535', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+                            <h3 style={{ margin: '0 0 8px', textAlign: 'center' }}>{gameState.pendingRavenPeek.card.name}</h3>
+                            <p style={{ fontSize: '0.8em', color: '#8f8' }}><strong>Vitória (maior lance):</strong> {gameState.pendingRavenPeek.card.highestBidderText}</p>
+                            <p style={{ fontSize: '0.8em', color: '#f88' }}><strong>Derrota (menor lance):</strong> {gameState.pendingRavenPeek.card.lowestBidderText}</p>
+                            <p style={{ fontSize: '0.8em', color: '#ccc' }}><strong>Demais:</strong> {gameState.pendingRavenPeek.card.everyoneElseText}</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button onClick={() => setGameState(prev => resolveRavenPeek(prev, 'top'))}
+                                style={{ ...actionBtnStyle, background: '#4a4', flex: 1 }}>
+                                Devolver ao topo
+                            </button>
+                            <button onClick={() => setGameState(prev => resolveRavenPeek(prev, 'bottom'))}
+                                style={{ ...actionBtnStyle, background: '#a44', flex: 1 }}>
+                                Enterrar no fundo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ═══ MESSENGER RAVEN — SWAP ORDER BANNER ═══ */}
+            {gameState.pendingRavenSwap && (
+                <div style={{
+                    background: 'linear-gradient(90deg, #3a2a5a, #2a2a4a)', padding: '10px 16px',
+                    borderRadius: '6px', marginBottom: '10px', textAlign: 'center',
+                    border: '2px solid #d4af37', color: '#eee'
+                }}>
+                    🐦 <strong style={{ color: gameState.cas[gameState.pendingRavenSwap.holder]?.color }}>
+                        {gameState.pendingRavenSwap.holder}
+                    </strong>: selecione uma área sua e escolha o novo token para trocar a ordem.
+                    <button onClick={() => setGameState(prev => skipRavenSwap(prev))}
+                        style={{ marginLeft: '12px', padding: '3px 10px', background: '#555', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
+                        Cancelar (não usar)
+                    </button>
+                </div>
+            )}
+
+            {/* ═══ UI MESSAGE (e.g. mandatory orders) ═══ */}
+            {gameState.uiMessage && gameState.phase === 'Planning' && (
+                <div style={{
+                    background: '#5a3a1a', padding: '8px 14px', borderRadius: '6px',
+                    marginBottom: '10px', textAlign: 'center', color: '#fd6', border: '1px solid #a86'
+                }}>
+                    {gameState.uiMessage}
+                </div>
+            )}
 
             {/* ═══ VALYRIAN STEEL BLADE ═══ */}
             {gameState.combat && !gameState.valyrianSteelBladeUsed && (
@@ -601,11 +755,7 @@ function App() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '12px 0' }}>
                                 {opponentCards.map(card => (
                                     <button key={card.id}
-                                        onClick={() => setGameState(prev => {
-                                            let s = resolvePatchfaceDiscard(prev, card.id);
-                                            if (!s.pendingRetreat && !s.combat && !s.pendingRobbRetreat) s = advanceActionTurn(s);
-                                            return s;
-                                        })}
+                                        onClick={() => setGameState(prev => resolvePatchfaceDiscard(prev, card.id))}
                                         style={{ ...cardButtonStyle, borderColor: '#f8a' }}>
                                         <span style={{ fontWeight: 'bold' }}>{card.name}</span>
                                         <span style={{ color: '#d4af37', marginLeft: '8px' }}>Str: {card.strength}</span>
@@ -613,11 +763,7 @@ function App() {
                                     </button>
                                 ))}
                             </div>
-                            <button onClick={() => setGameState(prev => {
-                                let s = resolvePatchfaceDiscard(prev, null);
-                                if (!s.pendingRetreat && !s.combat && !s.pendingRobbRetreat) s = advanceActionTurn(s);
-                                return s;
-                            })}
+                            <button onClick={() => setGameState(prev => resolvePatchfaceDiscard(prev, null))}
                                 style={{ ...actionBtnStyle, background: '#555', width: '100%' }}>
                                 Decline (discard nothing)
                             </button>
@@ -639,13 +785,14 @@ function App() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '12px 0' }}>
                                 {possibleAreas.map(areaId => (
                                     <button key={areaId}
-                                        onClick={() => setGameState(prev => {
-                                            let s = resolveRobbRetreat(prev, areaId);
-                                            s = advanceActionTurn(s);
-                                            return s;
-                                        })}
+                                        onClick={() => setGameState(prev => resolveRobbRetreat(prev, areaId))}
                                         style={{ ...cardButtonStyle, borderColor: '#6c6' }}>
                                         {gameState.board[areaId]?.name || areaId}
+                                        {gameState.pendingRobbRetreat?.lossByArea?.[areaId] ? (
+                                            <span style={{ color: '#f88', marginLeft: '8px', fontSize: '0.8em' }}>
+                                                (-{gameState.pendingRobbRetreat.lossByArea[areaId]} por suprimento)
+                                            </span>
+                                        ) : null}
                                     </button>
                                 ))}
                             </div>
@@ -658,13 +805,7 @@ function App() {
             <RetreatModal
                 gameState={gameState}
                 onResolve={(areaId) => {
-                    setGameState(prev => {
-                        let s = resolveRetreat(prev, areaId);
-                        if (!s.pendingPatchface && !s.pendingRobbRetreat && !s.combat) {
-                            s = advanceActionTurn(s);
-                        }
-                        return s;
-                    });
+                    setGameState(prev => resolveRetreat(prev, areaId));
                 }}
             />
 
@@ -733,6 +874,16 @@ function App() {
                     )}
                     {interaction.type === 'MARCH_SELECT_TO' && `🗡️ Click destination for ${interaction.unitIds.length} unit(s)`}
                     {interaction.type === 'RAID_SELECT_TO' && `🔥 Select Raid target from ${interaction.fromAreaId}`}
+                    {interaction.type === 'RAID_SELECT_TO' && (
+                        <button onClick={() => {
+                            const fromId = interaction.fromAreaId;
+                            setGameState(prev => advanceActionTurn(resolveRaidNoEffect(prev, fromId)));
+                            setInteraction({ type: 'NONE' });
+                        }}
+                            style={{ marginLeft: '15px', padding: '3px 10px', background: '#888', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
+                            Remover sem efeito
+                        </button>
+                    )}
                     {(interaction.type === 'MARCH_SELECT_TO' || interaction.type === 'RAID_SELECT_TO') && (
                         <button onClick={() => { setInteraction({ type: 'NONE' }); setSelectedUnitIds([]); }}
                             style={{ marginLeft: '15px', padding: '3px 10px', background: 'white', color: '#d44', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
@@ -850,16 +1001,11 @@ function App() {
                                             {port.units.length > 0 && (
                                                 <div style={{ fontSize: '0.8em', color: '#aaa', marginTop: '3px' }}>
                                                     {port.units.map((u, i) => (
-                                                        <span key={i} style={{ marginRight: '8px' }}>
-                                                            🚢 {u.type}
-                                                            {area.house === gameState.currentPlayerHouse && gameState.phase === 'Action' && (
-                                                                <button onClick={() => setGameState(prev => moveShipFromPort(prev, portId, u.id))}
-                                                                    style={{ marginLeft: '4px', padding: '1px 5px', background: '#3a5a7a', color: 'white', border: 'none', borderRadius: '2px', cursor: 'pointer', fontSize: '0.8em' }}>
-                                                                    → Sea
-                                                                </button>
-                                                            )}
-                                                        </span>
+                                                        <span key={i} style={{ marginRight: '8px' }}>🚢 {u.type}</span>
                                                     ))}
+                                                    <div style={{ fontSize: '0.9em', color: '#678', marginTop: '2px' }}>
+                                                        (navios saem do porto com uma ordem de Marcha no porto)
+                                                    </div>
                                                 </div>
                                             )}
                                             {port.units.length === 0 && <div style={{ fontSize: '0.8em', color: '#666' }}>Empty</div>}

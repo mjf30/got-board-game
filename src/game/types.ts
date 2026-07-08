@@ -57,11 +57,11 @@ export const ORDER_TOKENS: OrderTokenDef[] = [
 ];
 
 /** King's Court track → max star orders allowed, keyed by player count then position (1-based).
- *  Official rulebook values for 3/4/5/6 players. */
+ *  Official rulebook values for 3/4/5/6 players (3-4p use the King's Court overlay: 3/2/1/0). */
 export const STAR_ORDER_LIMITS: Record<number, Record<number, number>> = {
     6: { 1: 3, 2: 3, 3: 2, 4: 1, 5: 0, 6: 0 },
     5: { 1: 3, 2: 3, 3: 2, 4: 1, 5: 0 },
-    4: { 1: 3, 2: 3, 3: 1, 4: 0 },
+    4: { 1: 3, 2: 2, 3: 1, 4: 0 },
     3: { 1: 3, 2: 2, 3: 1 },
 };
 
@@ -101,6 +101,8 @@ export interface Area {
     units: Unit[];
     order?: Order | null;
     house?: HouseName | null;
+    /** Power token placed on the board to establish control (stays until an enemy takes the area) */
+    powerToken?: HouseName | null;
     // Port-specific fields
     connectedLand?: string;   // For ports: which land area this port belongs to
     connectedSea?: string;    // For ports: which sea area this port opens into
@@ -133,7 +135,8 @@ export interface GameState {
     turnOrder: HouseName[];
     wildlingThreat: number; // 0-12
     combat?: CombatState;
-    garrisons: Record<string, { house: HouseName; strength: number }>;
+    /** Garrison / Neutral Force tokens. house = null → neutral force (no house card combat, ≥ strength beats it) */
+    garrisons: Record<string, { house: HouseName | null; strength: number }>;
     currentPlayerHouse: HouseName;
     orderRestrictions?: OrderType[];
     winner?: HouseName;
@@ -152,12 +155,32 @@ export interface GameState {
         units: Unit[]; // Store full unit objects
         fromAreaId: string;
         possibleAreas: string[];
+        /** Units that must be destroyed for supply if this destination is chosen */
+        lossByArea?: Record<string, number>;
     };
-    pendingDecision?: {
-        cardName: string;
-        chooser: HouseName; // The house who decides
-        options: { label: string; action: string }[];
+    pendingDecision?: Decision;
+    /** Queue of decisions resolved one at a time (e.g. wildling penalties in turn order) */
+    pendingDecisionQueue?: Decision[];
+
+    /** Interactive unit picking (combat casualties, wildling destruction, upgrades, retreat supply losses) */
+    pendingUnitSelection?: UnitSelection;
+    pendingUnitSelectionQueue?: UnitSelection[];
+
+    /** Bid ties are decided by the holder of the Iron Throne token */
+    pendingBidTieBreak?: {
+        kind: 'track' | 'wildling-high' | 'wildling-low';
+        decider: HouseName;
+        tiedHouses: HouseName[];
+        /** For 'track': houses already ordered (best position first) */
+        ordered: HouseName[];
     };
+
+    /** Messenger Raven: peeked top wildling card awaiting top/bottom placement */
+    pendingRavenPeek?: { holder: HouseName; card: WildlingCard };
+    /** Messenger Raven: holder chose to swap one order (UI flow) */
+    pendingRavenSwap?: { holder: HouseName };
+    /** Whether the raven holder was already prompted this round */
+    ravenPromptShown?: boolean;
     // Generic flag for transient UI messages
     uiMessage?: string;
     // Bidding (Clash of Kings, Wildling Attack)
@@ -215,6 +238,7 @@ export interface GameState {
         units: Unit[];
         fromAreaId: string;
         possibleAreas: string[];
+        lossByArea?: Record<string, number>;
     };
 
     // Reconcile Armies: houses must disband units to meet supply limits
@@ -234,6 +258,40 @@ export interface BiddingState {
     currentTrack?: 'ironThrone' | 'fiefdoms' | 'kingsCourt';
     // For sequential Clash of Kings: remaining tracks to bid
     remainingTracks?: ('ironThrone' | 'fiefdoms' | 'kingsCourt')[];
+    /** Wildling: houses that do not participate (Preemptive Raid winner) */
+    excludedHouses?: HouseName[];
+    /** Wildling: fixed attack strength that ignores the threat track (Preemptive Raid re-attack = 6) */
+    strengthOverride?: number;
+    /** Wildling: highest/lowest bidders (after Iron Throne tie-breaking, if needed) */
+    chosenHighest?: HouseName;
+    chosenLowest?: HouseName;
+}
+
+export interface DecisionOption { label: string; action: string }
+
+export interface Decision {
+    cardName: string;
+    chooser: HouseName; // The house who decides
+    options: DecisionOption[];
+}
+
+export type UnitSelectionPurpose =
+    | 'combat-casualties'   // loser destroys `count` of his combat units
+    | 'destroy-units'       // wildling penalties: destroy `count` units anywhere
+    | 'retreat-supply'      // destroy `count` retreating units to respect supply
+    | 'crow-upgrade'        // Crow Killers reward: up to 2 footmen → knights
+    | 'crow-downgrade'      // Crow Killers penalty: choose `count` knights → footmen
+    | 'renly-upgrade';      // Renly: up to 1 participating/supporting footman → knight
+
+export interface UnitSelection {
+    purpose: UnitSelectionPurpose;
+    house: HouseName;
+    count: number;
+    /** May pick fewer than count (rewards phrased as "may ... up to") */
+    upTo?: boolean;
+    eligibleUnitIds: string[];
+    prompt: string;
+    context?: Record<string, string>;
 }
 
 export interface CombatState {
@@ -247,13 +305,33 @@ export interface CombatState {
     attackerStrength: number;
     defenderStrength: number;
     marchFromArea?: string; // Origin of the attack (for retreat)
+    /** Original march order data (needed by Loras, who moves the token into the conquered area) */
+    marchOrderStrength?: number;
+    marchOrderTokenIndex?: number;
     attackerUsedBlade?: boolean;
     defenderUsedBlade?: boolean;
-    // Third-party support decisions: areaId → side supported
+    // Support decisions per supporting area: areaId → side supported (includes own support, which may be refused)
     supportDecisions?: Record<string, 'attacker' | 'defender' | 'none'>;
+    /** Support strength actually granted per area (used by Queen of Thorns / Salladhor Saan) */
+    supportContributions?: Record<string, { side: 'attacker' | 'defender'; amount: number; house: HouseName; ships: number }>;
     // Combat sub-phase tracking
-    phase?: 'support' | 'cards' | 'pre-combat' | 'resolution' | 'post-combat';
-    // Flags to track whether Aeron/Tyrion checks have been done
+    phase?: 'support' | 'cards' | 'pre-combat' | 'casualties' | 'post-combat';
+    // Flags for one-time reveal abilities
     aeronResolved?: boolean;
     tyrionResolved?: boolean;
+    doranResolved?: boolean;
+    queenResolved?: boolean;
+    revealEffectsDone?: boolean;
+    /** Tyrion cancelled the card and opponent had no replacement → fights without a card */
+    attackerNoCard?: boolean;
+    defenderNoCard?: boolean;
+    // Resolution result (set once winner is determined)
+    attackerWon?: boolean;
+    kills?: number;                 // casualties owed by the loser
+    /** Post-combat effects remaining (processed in order by continueCombat) */
+    postQueue?: string[];
+    /** Defender units that survived casualties and must retreat */
+    survivingDefenders?: Unit[];
+    /** Attacker units held aside while resolving retreat supply losses */
+    retreatingUnits?: Unit[];
 }

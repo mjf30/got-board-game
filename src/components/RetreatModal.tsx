@@ -42,6 +42,7 @@ export const RetreatModal: React.FC<RetreatModalProps> = ({ gameState, onResolve
                 <div style={{ display: 'grid', gap: '10px', marginTop: '20px' }}>
                     {possibleAreas.map(areaId => {
                         const area = gameState.board[areaId];
+                        const loss = pendingRetreat.lossByArea?.[areaId] ?? 0;
                         return (
                             <button
                                 key={areaId}
@@ -61,8 +62,9 @@ export const RetreatModal: React.FC<RetreatModalProps> = ({ gameState, onResolve
                                 onMouseOut={e => e.currentTarget.style.backgroundColor = '#2a2a40'}
                             >
                                 <span>{area.name}</span>
-                                <span style={{ fontSize: '0.8em', color: '#aaa' }}>
+                                <span style={{ fontSize: '0.8em', color: loss > 0 ? '#f88' : '#aaa' }}>
                                     {area.house ? `(${area.house})` : '(Empty)'}
+                                    {loss > 0 ? ` — destrói ${loss} por suprimento` : ''}
                                 </span>
                             </button>
                         );

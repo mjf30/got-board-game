@@ -79,7 +79,7 @@ export function createInitialGameState(playerCount: number = 6): GameState {
     });
 
     // Place garrison tokens on home areas
-    const garrisons: Record<string, { house: HouseName; strength: number }> = {};
+    const garrisons: Record<string, { house: HouseName | null; strength: number }> = {};
     activeHouses.forEach(house => {
         const areaId = HOUSE_SETUP[house].homeArea;
         if (board[areaId]) {
@@ -87,6 +87,11 @@ export function createInitialGameState(playerCount: number = 6): GameState {
             garrisons[areaId] = { house, strength };
         }
     });
+
+    // Neutral Force tokens present in every player count:
+    // King's Landing (5) and The Eyrie (6)
+    garrisons["King's Landing"] = { house: null, strength: 5 };
+    garrisons['The Eyrie'] = { house: null, strength: 6 };
 
     // ── Neutral Forces (3-5 player games) ──
     // Data verified against S&R baseGameData.json
@@ -125,38 +130,28 @@ export function createInitialGameState(playerCount: number = 6): GameState {
     };
 
     if (playerCount === 3) {
-        // Block inaccessible southern regions
+        // Block inaccessible southern regions ("~" Neutral Force tokens: impassable)
         BLOCKED_REGIONS_3P.forEach(areaId => {
             if (board[areaId]) {
                 board[areaId].blocked = true;
                 board[areaId].house = null;
-                // High garrison to prevent any combat resolution exploits
-                garrisons[areaId] = { house: 'Stark' as HouseName, strength: 99 };
                 console.log(`🚫 Blocked: ${areaId}`);
             }
         });
     } else if (playerCount === 4) {
-        // Neutral garrison tokens in Tyrell + Martell territory
+        // Neutral Force tokens (no owner) in Tyrell + Martell territory
         Object.entries(NEUTRAL_GARRISONS_4P).forEach(([areaId, strength]) => {
             if (board[areaId]) {
-                garrisons[areaId] = { house: 'Tyrell' as HouseName, strength };
-                board[areaId].house = 'Tyrell' as HouseName;
-                // Correct house assignment for Martell-region areas
-                const martellAreas = ['Sunspear', 'Yronwood', 'Salt Shore', 'Starfall', 'The Boneway', "Prince's Pass"];
-                if (martellAreas.includes(areaId)) {
-                    garrisons[areaId].house = 'Martell' as HouseName;
-                    board[areaId].house = 'Martell' as HouseName;
-                }
-                console.log(`🛡️ Neutral garrison: ${areaId} (${strength})`);
+                garrisons[areaId] = { house: null, strength };
+                console.log(`🛡️ Neutral force: ${areaId} (${strength})`);
             }
         });
     } else if (playerCount === 5) {
-        // Neutral garrison tokens in Martell territory
+        // Neutral Force tokens (no owner) in Martell territory
         Object.entries(NEUTRAL_GARRISONS_5P).forEach(([areaId, strength]) => {
             if (board[areaId]) {
-                garrisons[areaId] = { house: 'Martell' as HouseName, strength };
-                board[areaId].house = 'Martell' as HouseName;
-                console.log(`🛡️ Neutral garrison: ${areaId} (${strength})`);
+                garrisons[areaId] = { house: null, strength };
+                console.log(`🛡️ Neutral force: ${areaId} (${strength})`);
             }
         });
     }
