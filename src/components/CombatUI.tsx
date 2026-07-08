@@ -5,9 +5,11 @@ interface CombatUIProps {
     gameState: GameState;
     onCardSelect: (house: HouseName, cardId: string) => void;
     onResolveCombat: () => void;
+    /** Online: houses this client controls (null = local hot-seat, everything visible) */
+    myHouses?: HouseName[] | null;
 }
 
-export const CombatUI: React.FC<CombatUIProps> = ({ gameState, onCardSelect, onResolveCombat }) => {
+export const CombatUI: React.FC<CombatUIProps> = ({ gameState, onCardSelect, onResolveCombat, myHouses }) => {
     const { combat } = gameState;
     if (!combat) return null;
 
@@ -18,6 +20,9 @@ export const CombatUI: React.FC<CombatUIProps> = ({ gameState, onCardSelect, onR
     const defenderHand = gameState.cas[defender].cards;
     // Tyrion may leave one side without a card
     const bothSelected = (!!attackerCard || !!combat.attackerNoCard) && (!!defenderCard || !!combat.defenderNoCard);
+    const isMine = (house: HouseName) => !myHouses || myHouses.includes(house);
+    // Cards are chosen secretly and revealed simultaneously
+    const concealSelection = (house: HouseName) => !isMine(house) && !bothSelected;
 
     const renderCardButton = (card: typeof attackerHand[0], house: HouseName, isSelected: boolean, isDisabled: boolean) => (
         <button
@@ -87,10 +92,15 @@ export const CombatUI: React.FC<CombatUIProps> = ({ gameState, onCardSelect, onR
                     <div style={sideStyle(gameState.cas[attacker].color)}>
                         <h4 style={{ margin: '0 0 8px', color: gameState.cas[attacker].color, fontSize: '0.85em' }}>
                             ATTACKER — {attacker} ({attackerHand.length} cards)
+                            {concealSelection(attacker) && attackerCard && <span style={{ color: '#8f8' }}> ✓ escolheu</span>}
                         </h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                             {attackerHand.map(card =>
-                                renderCardButton(card, attacker, attackerCard === card.id, !!attackerCard)
+                                renderCardButton(
+                                    card, attacker,
+                                    attackerCard === card.id && !concealSelection(attacker),
+                                    !!attackerCard || !isMine(attacker)
+                                )
                             )}
                         </div>
                     </div>
@@ -98,10 +108,15 @@ export const CombatUI: React.FC<CombatUIProps> = ({ gameState, onCardSelect, onR
                     <div style={sideStyle(gameState.cas[defender].color)}>
                         <h4 style={{ margin: '0 0 8px', color: gameState.cas[defender].color, fontSize: '0.85em' }}>
                             DEFENDER — {defender} ({defenderHand.length} cards)
+                            {concealSelection(defender) && defenderCard && <span style={{ color: '#8f8' }}> ✓ escolheu</span>}
                         </h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                             {defenderHand.map(card =>
-                                renderCardButton(card, defender, defenderCard === card.id, !!defenderCard)
+                                renderCardButton(
+                                    card, defender,
+                                    defenderCard === card.id && !concealSelection(defender),
+                                    !!defenderCard || !isMine(defender)
+                                )
                             )}
                         </div>
                     </div>

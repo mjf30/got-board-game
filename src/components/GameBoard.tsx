@@ -9,6 +9,8 @@ interface GameBoardProps {
     gameState: GameState;
     onAreaClick: (areaId: string) => void;
     selectedArea?: string | null;
+    /** Online: houses whose orders are shown facedown (Planning phase secrecy) */
+    concealOrdersOf?: HouseName[];
 }
 
 // Parse "45%" → 45
@@ -34,7 +36,7 @@ function findNearestArea(xPct: number, yPct: number): string | null {
     return nearest || null;
 }
 
-export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onAreaClick, selectedArea }) => {
+export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onAreaClick, selectedArea, concealOrdersOf }) => {
     const boardRef = useRef<HTMLDivElement>(null);
     const [hoveredArea, setHoveredArea] = useState<string | null>(null);
     const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
@@ -265,13 +267,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onAreaClick, se
                             </div>
                         )}
 
-                        {/* Order Token */}
+                        {/* Order Token (facedown for concealed houses: show the house sigil back) */}
                         {order && (
                             <div style={{
                                 position: 'absolute',
                                 width: '62px',
                                 height: '62px',
-                                backgroundImage: `url(${getTokenSprite(`order-${order.type}-${order.star ? '1' : '0'}`) || ''})`,
+                                backgroundImage: concealOrdersOf?.includes(order.house)
+                                    ? `url(${getTokenSprite(`power-${order.house}`) || ''})`
+                                    : `url(${getTokenSprite(`order-${order.type}-${order.star ? '1' : '0'}`) || ''})`,
                                 backgroundSize: 'contain',
                                 backgroundRepeat: 'no-repeat',
                                 top: '50%',
@@ -279,6 +283,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onAreaClick, se
                                 transform: 'translate(-50%, -50%) scale(0.55)',
                                 zIndex: 40,
                                 pointerEvents: 'none',
+                                filter: concealOrdersOf?.includes(order.house) ? 'brightness(0.75)' : 'none',
                             }} />
                         )}
 
