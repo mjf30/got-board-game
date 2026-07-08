@@ -107,7 +107,7 @@ export const OnlineLobby: React.FC<OnlineLobbyProps> = ({ onGameStart, onBack })
             <>
                 <div style={panelStyle}>
                     <div style={{ fontSize: '0.85em', color: '#d4af37', marginBottom: '8px', fontWeight: 'bold' }}>SEU NOME</div>
-                    <input value={name} onChange={e => setName(e.target.value)} placeholder="ex.: Murilo"
+                    <input value={name} onChange={e => setName(e.target.value)} placeholder="ex.: Jon Snow"
                         style={{
                             width: '100%', padding: '10px', background: '#1a1a2e', color: 'white',
                             border: '1px solid #444', borderRadius: '6px', fontSize: '1em', boxSizing: 'border-box'
