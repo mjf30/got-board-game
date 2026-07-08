@@ -1,8 +1,8 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { GameState, HouseName } from '../game/types';
 import { INITIAL_MAP } from '../game/constants/map';
 import { HOUSE_SETUP } from '../game/constants/houses';
-import { AREA_LAYOUT, UNIT_SPRITES, TOKEN_SPRITES } from '../game/constants/layout';
+import { AREA_LAYOUT, AREA_EXTRA_ANCHORS, BOARD_DEAD_ZONES, UNIT_SPRITES, TOKEN_SPRITES } from '../game/constants/layout';
 import { BoardTracks } from './BoardTracks';
 
 interface GameBoardProps {
@@ -11,35 +11,70 @@ interface GameBoardProps {
     selectedArea?: string | null;
     /** Online: houses whose orders are shown facedown (Planning phase secrecy) */
     concealOrdersOf?: HouseName[];
+    /** Areas highlighted as valid targets (march/raid destinations) */
+    highlightAreas?: string[];
 }
 
 // Parse "45%" → 45
 const pct = (s: string) => parseFloat(s);
 
-// Precompute numeric positions once
-const AREA_POSITIONS = Object.entries(AREA_LAYOUT).map(([id, pos]) => ({
-    id,
-    x: pct(pos.left),
-    y: pct(pos.top),
-}));
+// The board art is taller than wide: 1% of height covers more pixels than 1% of width.
+// Weigh dy so "nearest anchor" means nearest in PHYSICAL distance.
+const Y_WEIGHT = 2175 / 1464;
 
-function findNearestArea(xPct: number, yPct: number): string | null {
-    let nearest = '';
+// Reference rendered width at which the base pixel sizes look right
+const BASE_BOARD_WIDTH = 720;
+
+// Precompute all hit-testing anchors (primary position + extra anchors per area)
+const AREA_ANCHORS: { id: string; x: number; y: number }[] = [
+    ...Object.entries(AREA_LAYOUT).map(([id, pos]) => ({ id, x: pct(pos.left), y: pct(pos.top) })),
+    ...Object.entries(AREA_EXTRA_ANCHORS).flatMap(([id, list]) =>
+        list.map(pos => ({ id, x: pct(pos.left), y: pct(pos.top) }))
+    ),
+];
+
+function findAreaAt(xPct: number, yPct: number): string | null {
+    // Dead zones: printed tracks panel (right) and wildling strip (top)
+    if (xPct > BOARD_DEAD_ZONES.tracksPanelLeft) return null;
+    if (yPct < BOARD_DEAD_ZONES.wildlingStripBottom) return null;
+
+    let nearest: string | null = null;
     let minDist = Infinity;
-    for (const { id, x, y } of AREA_POSITIONS) {
-        const dist = (xPct - x) ** 2 + (yPct - y) ** 2;
+    for (const { id, x, y } of AREA_ANCHORS) {
+        const dx = xPct - x;
+        const dy = (yPct - y) * Y_WEIGHT;
+        const dist = dx * dx + dy * dy;
         if (dist < minDist) {
             minDist = dist;
             nearest = id;
         }
     }
-    return nearest || null;
+    // Ignore clicks absurdly far from any anchor (art margins)
+    if (minDist > 15 * 15) return null;
+    return nearest;
 }
 
-export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onAreaClick, selectedArea, concealOrdersOf }) => {
+export const GameBoard: React.FC<GameBoardProps> = ({
+    gameState, onAreaClick, selectedArea, concealOrdersOf, highlightAreas
+}) => {
     const boardRef = useRef<HTMLDivElement>(null);
     const [hoveredArea, setHoveredArea] = useState<string | null>(null);
     const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+    const [scale, setScale] = useState(1);
+
+    // Scale marker sizes with the rendered board width
+    useEffect(() => {
+        const el = boardRef.current;
+        if (!el) return;
+        const update = () => {
+            const w = el.getBoundingClientRect().width;
+            if (w > 0) setScale(Math.max(0.5, Math.min(1.5, w / BASE_BOARD_WIDTH)));
+        };
+        update();
+        const ro = new ResizeObserver(update);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, []);
 
     const getUnitSprite = (unitType: string, house: HouseName) => {
         const key = `${house}-${unitType}`;
@@ -64,14 +99,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onAreaClick, se
     const handleBoardClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
         const pos = getClickPosition(e);
         if (!pos) return;
-        const nearest = findNearestArea(pos.xPct, pos.yPct);
+        const nearest = findAreaAt(pos.xPct, pos.yPct);
         if (nearest) onAreaClick(nearest);
     }, [getClickPosition, onAreaClick]);
 
     const handleBoardMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
         const pos = getClickPosition(e);
         if (!pos) return;
-        const nearest = findNearestArea(pos.xPct, pos.yPct);
+        const nearest = findAreaAt(pos.xPct, pos.yPct);
         setHoveredArea(nearest);
         setTooltipPos({ x: pos.clientX, y: pos.clientY });
     }, [getClickPosition]);
@@ -143,6 +178,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onAreaClick, se
                 const garrison = gameState.garrisons[areaId];
                 const isSelected = selectedArea === areaId;
                 const isHovered = hoveredArea === areaId && !isSelected;
+                const isHighlighted = highlightAreas?.includes(areaId) ?? false;
 
                 return (
                     <div
@@ -151,11 +187,29 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onAreaClick, se
                             position: 'absolute',
                             top: position.top,
                             left: position.left,
-                            transform: 'translate(-50%, -50%)',
+                            transform: `translate(-50%, -50%) scale(${scale})`,
                             zIndex: isSelected ? 12 : 10,
                             pointerEvents: 'none', // clicks handled by board
                         }}
                     >
+                        {/* Valid-target highlight ring */}
+                        {isHighlighted && (
+                            <div className="area-highlight-ring" style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                width: isPort ? '48px' : isSea ? '60px' : '68px',
+                                height: isPort ? '48px' : isSea ? '60px' : '68px',
+                                borderRadius: '50%',
+                                border: '3px dashed #4dff7c',
+                                boxShadow: '0 0 12px 2px rgba(77,255,124,0.45)',
+                                background: 'rgba(77,255,124,0.10)',
+                                zIndex: 4,
+                                pointerEvents: 'none',
+                            }} />
+                        )}
+
                         {/* Selection highlight ring */}
                         {isSelected && (
                             <div className="area-selected-ring" style={{
@@ -192,21 +246,21 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onAreaClick, se
                             }} />
                         )}
 
-                        {/* Area icons strip (supply barrels, crowns, castle/stronghold) — land only */}
-                        {!isPort && !isSea && (mapDef?.supply || mapDef?.power || mapDef?.stronghold || mapDef?.castle) && (
+                        {/* Area icons strip — only on hover/selection (icons are already printed on the art) */}
+                        {!isPort && !isSea && (isSelected || isHovered) &&
+                         (mapDef?.supply || mapDef?.power || mapDef?.stronghold || mapDef?.castle) && (
                             <div style={{
                                 position: 'absolute',
-                                top: '-24px',
+                                top: '-26px',
                                 left: '50%',
                                 transform: 'translateX(-50%)',
                                 display: 'flex',
                                 gap: '1px',
-                                fontSize: '9px',
+                                fontSize: '10px',
                                 zIndex: 9,
                                 pointerEvents: 'none',
                                 whiteSpace: 'nowrap',
                                 textShadow: '0 0 3px #000, 0 0 6px #000',
-                                opacity: (isSelected || isHovered) ? 1 : 0.7,
                             }}>
                                 {mapDef?.stronghold && <span title="Stronghold">🏰</span>}
                                 {mapDef?.castle && !mapDef?.stronghold && <span title="Castle">🏠</span>}
@@ -215,10 +269,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onAreaClick, se
                             </div>
                         )}
 
-                        {/* Units */}
+                        {/* Units — horizontal fan centered on the area */}
                         {units.map((unit, index) => {
                             const spritePos = getUnitSprite(unit.type, unit.house);
                             if (!spritePos) return null;
+                            const n = units.length;
+                            const fanX = (index - (n - 1) / 2) * 18;
+                            const fanY = (index % 2) * 6 - 24;
 
                             return (
                                 <div
@@ -232,18 +289,45 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onAreaClick, se
                                         backgroundRepeat: 'no-repeat',
                                         transform: `scale(0.65) ${unit.routed ? 'rotate(90deg)' : ''}`,
                                         transformOrigin: 'center center',
-                                        top: `${-20 - (index * 4)}px`,
-                                        left: `${-20 + (index * 6)}px`,
+                                        top: `${fanY}px`,
+                                        left: `${fanX - 31}px`,
                                         pointerEvents: 'none',
                                         zIndex: 20 + index,
                                         opacity: unit.routed ? 0.6 : 1,
-                                        filter: unit.routed ? 'grayscale(100%)' : 'none'
+                                        filter: unit.routed
+                                            ? 'grayscale(100%) drop-shadow(0 1px 2px rgba(0,0,0,0.5))'
+                                            : 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))'
                                     }}
                                 />
                             );
                         })}
 
-                        {/* Garrison */}
+                        {/* Army size badge */}
+                        {units.length > 1 && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '8px',
+                                left: `${(units.length - 1) / 2 * 18 + 12}px`,
+                                minWidth: '18px',
+                                height: '18px',
+                                borderRadius: '9px',
+                                background: 'rgba(15,18,30,0.9)',
+                                border: '1px solid #d4af37',
+                                color: '#ffd700',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '0 3px',
+                                zIndex: 32,
+                                pointerEvents: 'none',
+                            }}>
+                                {units.length}
+                            </div>
+                        )}
+
+                        {/* Garrison / Neutral Force */}
                         {garrison && (
                             <div style={{
                                 position: 'absolute',
@@ -251,7 +335,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onAreaClick, se
                                 left: '0px',
                                 width: '30px',
                                 height: '30px',
-                                background: 'linear-gradient(to right, #000, #666)',
+                                background: garrison.house
+                                    ? 'linear-gradient(to right, #000, #666)'
+                                    : 'linear-gradient(to right, #4a3a10, #8a6a20)',
                                 borderRadius: '0 0 50% 50%',
                                 color: 'white',
                                 textAlign: 'center',
@@ -313,8 +399,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onAreaClick, se
                 );
             })}
 
-            {/* Turn Marker, Wildling Track, Supply Track, Victory Track, etc. */}
-            <BoardTracks gameState={gameState} />
+            {/* Physical tokens on the printed tracks (influence, supply, victory, round, wildling) */}
+            <BoardTracks gameState={gameState} scale={scale} />
         </div>
     );
 };

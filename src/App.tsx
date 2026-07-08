@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createInitialGameState } from './game/setup'
-import { biddingParticipants, getPortForArea } from './game/engine'
+import { biddingParticipants, getPortForArea, portOwner } from './game/engine'
+import { isMoveValid } from './game/navigation'
 import { GameAction, applyAction } from './net/actions'
 import { NetSession } from './net/online'
 import { UnitPickerModal } from './components/UnitPickerModal'
@@ -111,8 +112,12 @@ function App() {
             return;
         }
 
-        // March destination
+        // March destination — only highlighted (valid) areas accept the move
         if (interaction.type === 'MARCH_SELECT_TO') {
+            if (!highlightAreas.includes(areaId)) {
+                setSelectedArea(areaId);
+                return;
+            }
             dispatch({ t: 'marchMove', fromAreaId: interaction.fromAreaId, toAreaId: areaId, unitIds: interaction.unitIds });
             setInteraction({ type: 'NONE' });
             setSelectedUnitIds([]);
@@ -120,8 +125,12 @@ function App() {
             return;
         }
 
-        // Raid target
+        // Raid target — only highlighted (valid) areas accept the raid
         if (interaction.type === 'RAID_SELECT_TO') {
+            if (!highlightAreas.includes(areaId)) {
+                setSelectedArea(areaId);
+                return;
+            }
             dispatch({ t: 'raid', fromAreaId: interaction.fromAreaId, toAreaId: areaId });
             setInteraction({ type: 'NONE' });
             return;
@@ -267,6 +276,54 @@ function App() {
         myHouses && gameState.phase === 'Planning' && !gameState.ravenPromptShown && !gameState.pendingRavenSwap
             ? gameState.turnOrder.filter(h => !myHouses.includes(h))
             : [];
+
+    // Valid targets highlighted on the board during march/raid target selection
+    const highlightAreas: string[] = (() => {
+        if (interaction.type === 'MARCH_SELECT_TO') {
+            const fromId = interaction.fromAreaId;
+            const from = gameState.board[fromId];
+            if (!from) return [];
+            const mover = (from.type === 'Port' ? portOwner(gameState, fromId) : from.house) as HouseName | null;
+            if (!mover) return [];
+            const units = from.units.filter(u => interaction.unitIds.includes(u.id));
+            const hasLand = units.some(u => u.type !== 'Ship');
+            const hasShip = units.some(u => u.type === 'Ship');
+            return Object.keys(gameState.board).filter(id => {
+                if (id === fromId) return false;
+                const a = gameState.board[id];
+                if (a.blocked) return false;
+                if (a.type === 'Sea' || a.type === 'Port') {
+                    if (!hasShip) return false;
+                } else if (!hasLand) {
+                    return false;
+                }
+                if (a.type === 'Port') {
+                    if (portOwner(gameState, id) !== mover) return false;
+                    if (a.units.length >= (a.maxShips ?? 3)) return false;
+                }
+                return isMoveValid(gameState, fromId, id, mover);
+            });
+        }
+        if (interaction.type === 'RAID_SELECT_TO') {
+            const fromId = interaction.fromAreaId;
+            const from = gameState.board[fromId];
+            if (!from?.order) return [];
+            const raider = (from.type === 'Port' ? portOwner(gameState, fromId) : from.house) as HouseName | null;
+            const raidable = ['Raid', 'Support', 'ConsolidatePower', ...(from.order.star ? ['Defense'] : [])];
+            return from.adjacent.filter(id => {
+                const a = gameState.board[id];
+                if (!a?.order) return false;
+                const victim = (a.type === 'Port' ? portOwner(gameState, id) : a.house) as HouseName | null;
+                if (!victim || victim === raider) return false;
+                if (!raidable.includes(a.order.type)) return false;
+                if (from.type === 'Land' && (a.type === 'Sea' || a.type === 'Port')) return false;
+                if (from.type === 'Port' && from.connectedSea !== id) return false;
+                if (a.type === 'Port' && a.connectedSea !== fromId) return false;
+                return true;
+            });
+        }
+        return [];
+    })();
 
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto', color: '#eee' }}>
@@ -983,7 +1040,7 @@ function App() {
 
                 {/* CENTER: Map */}
                 <div style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 80px)' }}>
-                    <GameBoard gameState={gameState} onAreaClick={handleAreaClick} selectedArea={selectedArea} concealOrdersOf={concealOrdersOf} />
+                    <GameBoard gameState={gameState} onAreaClick={handleAreaClick} selectedArea={selectedArea} concealOrdersOf={concealOrdersOf} highlightAreas={highlightAreas} />
                 </div>
 
                 {/* RIGHT: Area Details */}

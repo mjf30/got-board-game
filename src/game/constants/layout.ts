@@ -77,6 +77,59 @@ export const AREA_LAYOUT: Record<string, { top: string; left: string }> = {
     'Sea of Dorne': { top: '85%', left: '60%' },
 };
 
+/** Extra hit-testing anchors for large/irregular areas (mostly seas).
+ *  Clicks pick the nearest anchor among AREA_LAYOUT + these. */
+export const AREA_EXTRA_ANCHORS: Record<string, { top: string; left: string }[]> = {
+    'Bay of Ice': [
+        { top: '13%', left: '7%' }, { top: '20%', left: '4%' }, { top: '27%', left: '8%' },
+    ],
+    'Sunset Sea': [
+        { top: '30%', left: '3%' }, { top: '38%', left: '4%' }, { top: '47%', left: '4%' }, { top: '58%', left: '4%' },
+    ],
+    'The Shivering Sea': [
+        { top: '9%', left: '60%' }, { top: '13%', left: '69%' }, { top: '20%', left: '70%' },
+    ],
+    'The Narrow Sea': [
+        { top: '34%', left: '71%' }, { top: '48%', left: '70%' }, { top: '55%', left: '68%' },
+    ],
+    "Ironman's Bay": [
+        { top: '44%', left: '12%' }, { top: '50%', left: '17%' },
+    ],
+    'The Golden Sound': [
+        { top: '60%', left: '13%' },
+    ],
+    'Blackwater Bay': [
+        { top: '62%', left: '63%' },
+    ],
+    'Shipbreaker Bay': [
+        { top: '69%', left: '70%' }, { top: '78%', left: '67%' },
+    ],
+    'Sea of Dorne': [
+        { top: '83%', left: '63%' },
+    ],
+    'East Summer Sea': [
+        { top: '97%', left: '55%' }, { top: '93%', left: '66%' }, { top: '99%', left: '62%' },
+    ],
+    'West Summer Sea': [
+        { top: '78%', left: '4%' }, { top: '85%', left: '4%' }, { top: '96%', left: '15%' }, { top: '97%', left: '30%' },
+    ],
+    'Redwyne Straits': [
+        { top: '83%', left: '7%' }, { top: '90%', left: '4%' },
+    ],
+    'The Stony Shore': [
+        { top: '27%', left: '15%' },
+    ],
+};
+
+/** Board regions that are art, not playable areas (clicks are ignored):
+ *  the tracks panel on the right and the Wildlings strip on top. */
+export const BOARD_DEAD_ZONES = {
+    /** x% beyond which the printed tracks panel starts */
+    tracksPanelLeft: 73.5,
+    /** y% above which the wildling track strip sits */
+    wildlingStripBottom: 5.5,
+};
+
 // Tokens sprite map
 // Row 0 spans the ENTIRE sheet (cols 0-10) for Order tokens.
 // Rows 1-4 left (cols 0-5) are house-specific tokens.
@@ -160,77 +213,58 @@ export const UNIT_SPRITES: Record<string, string> = {
     'Martell-SiegeEngine': `${BASE}images/sprite_right_r4_c11.png`,
 };
 
-// Track Layout (Estimated Positions based on Screenshot)
-// Board is tall (1464x2175). Assumed top-left origin.
+// Track Layout — calibrated against the printed tracks on board.png (1464x2175).
+// Influence columns: position 1 is at the BOTTOM (next to the dominance token boxes).
+const INFLUENCE_Y = ['29.8%', '25.0%', '19.7%', '14.6%', '9.4%', '4.4%']; // index 0 = position 1
+
 export const TRACK_LAYOUT: Record<string, { top: string; left: string }[]> = {
-    // Iron Throne (1-6) - Top Right, Vertical
-    'ironThrone': [
-        { top: '8%', left: '76%' },
-        { top: '8%', left: '81%' },
-        { top: '8%', left: '86%' },
-        { top: '8%', left: '91%' },
-        { top: '8%', left: '96%' },
-        { top: '12%', left: '96%' },
-    ],
-    // Fiefdoms (1-6) - Middle Right
-    'fiefdoms': [
-        { top: '18%', left: '76%' },
-        { top: '18%', left: '81%' },
-        { top: '18%', left: '86%' },
-        { top: '18%', left: '91%' },
-        { top: '18%', left: '96%' },
-        { top: '22%', left: '96%' },
-    ],
-    // King's Court (1-6) - Lower Right
-    'kingsCourt': [
-        { top: '28%', left: '76%' },
-        { top: '28%', left: '81%' },
-        { top: '28%', left: '86%' },
-        { top: '28%', left: '91%' },
-        { top: '28%', left: '96%' },
-        { top: '32%', left: '96%' },
-    ],
-    // Supply (Vertical Column, Right side below Influence)
+    // Iron Throne (positions 1-6) — leftmost printed column
+    'ironThrone': INFLUENCE_Y.map(top => ({ top, left: '79.0%' })),
+    // Fiefdoms (1-6) — middle column
+    'fiefdoms': INFLUENCE_Y.map(top => ({ top, left: '87.2%' })),
+    // King's Court (1-6) — rightmost column (with the printed stars)
+    'kingsCourt': INFLUENCE_Y.map(top => ({ top, left: '94.9%' })),
+    // Supply scroll (values 0-6, bottom → top)
     'supply': [
-        { top: '65%', left: '84%' }, // 0 (Bottom?)
-        { top: '60%', left: '84%' }, // 1
-        { top: '55%', left: '84%' }, // 2
-        { top: '50%', left: '84%' }, // 3
-        { top: '45%', left: '84%' }, // 4
-        { top: '40%', left: '84%' }, // 5
-        { top: '35%', left: '84%' }, // 6 (Top)
+        { top: '63.1%', left: '80.3%' }, // 0
+        { top: '59.9%', left: '80.3%' }, // 1
+        { top: '56.4%', left: '80.3%' }, // 2
+        { top: '53.4%', left: '80.3%' }, // 3
+        { top: '50.2%', left: '80.3%' }, // 4
+        { top: '47.2%', left: '80.3%' }, // 5
+        { top: '43.8%', left: '80.3%' }, // 6
     ],
-    // Wildling (Top Center-Left, Horizontal)
+    // Wildlings strip on top (threat 0,2,4,...,12)
     'wildling': [
-        { top: '2%', left: '25%' }, // 0
-        { top: '2%', left: '30%' }, // 2
-        { top: '2%', left: '35%' }, // 4
-        { top: '2%', left: '40%' }, // 6
-        { top: '2%', left: '45%' }, // 8
-        { top: '2%', left: '50%' }, // 10
-        { top: '2%', left: '60%' }, // 12 (Jump?)
+        { top: '3.5%', left: '20.3%' }, // 0
+        { top: '3.5%', left: '25.7%' }, // 2
+        { top: '3.5%', left: '31.1%' }, // 4
+        { top: '3.5%', left: '36.5%' }, // 6
+        { top: '3.5%', left: '41.9%' }, // 8
+        { top: '3.5%', left: '47.3%' }, // 10
+        { top: '3.5%', left: '52.7%' }, // 12
     ],
-    // Round (Bottom Right, Vertical Column, Left of Victory)
+    // Round track (1 at the bottom → 10 at the top)
     'round': [
-        { top: '75%', left: '78%' }, // 1
-        { top: '78%', left: '78%' }, // 2
-        { top: '81%', left: '78%' }, // 3
-        { top: '84%', left: '78%' }, // 4
-        { top: '87%', left: '78%' }, // 5
-        { top: '90%', left: '78%' }, // 6
-        { top: '93%', left: '78%' }, // 7
-        { top: '96%', left: '78%' }, // 8
-        { top: '99%', left: '78%' }, // 9
-        { top: '99%', left: '82%' }, // 10
+        { top: '96.8%', left: '81.6%' }, // 1
+        { top: '93.8%', left: '81.6%' }, // 2
+        { top: '90.9%', left: '81.6%' }, // 3
+        { top: '87.9%', left: '81.6%' }, // 4
+        { top: '84.9%', left: '81.6%' }, // 5
+        { top: '81.8%', left: '81.6%' }, // 6
+        { top: '78.9%', left: '81.6%' }, // 7
+        { top: '75.9%', left: '81.6%' }, // 8
+        { top: '73.1%', left: '81.6%' }, // 9
+        { top: '70.1%', left: '81.6%' }, // 10
     ],
-    // Victory (Bottom Right, Vertical Column, Rightmost)
+    // Victory track (1 at the bottom → 7 at the top, gold)
     'victory': [
-        { top: '75%', left: '92%' }, // 1
-        { top: '78%', left: '92%' }, // 2
-        { top: '81%', left: '92%' }, // 3
-        { top: '84%', left: '92%' }, // 4
-        { top: '87%', left: '92%' }, // 5
-        { top: '90%', left: '92%' }, // 6
-        { top: '93%', left: '92%' }, // 7
+        { top: '97.0%', left: '93.2%' }, // 1
+        { top: '93.1%', left: '93.2%' }, // 2
+        { top: '88.2%', left: '93.2%' }, // 3
+        { top: '83.9%', left: '93.2%' }, // 4
+        { top: '79.1%', left: '93.2%' }, // 5
+        { top: '74.9%', left: '93.2%' }, // 6
+        { top: '70.1%', left: '93.2%' }, // 7
     ]
 };
