@@ -16,7 +16,8 @@ export const CombatUI: React.FC<CombatUIProps> = ({ gameState, onCardSelect, onR
     // Use PLAYER'S CURRENT HAND — not all cards
     const attackerHand = gameState.cas[attacker].cards;
     const defenderHand = gameState.cas[defender].cards;
-    const bothSelected = !!attackerCard && !!defenderCard;
+    // Tyrion may leave one side without a card
+    const bothSelected = (!!attackerCard || !!combat.attackerNoCard) && (!!defenderCard || !!combat.defenderNoCard);
 
     const renderCardButton = (card: typeof attackerHand[0], house: HouseName, isSelected: boolean, isDisabled: boolean) => (
         <button

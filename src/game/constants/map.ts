@@ -33,13 +33,13 @@ export const INITIAL_MAP: Record<string, Area> = {
         adjacent: [
             'Castle Black', 'Karhold', 'The Stony Shore', 'White Harbor', 'Moat Cailin',
             'Bay of Ice', 'The Shivering Sea'
-        ],
+        , 'Winterfell Port'],
         units: []
     },
     'White Harbor': {
         id: 'White Harbor', name: 'White Harbor', type: 'Land',
         castle: true,
-        adjacent: ['Winterfell', 'Moat Cailin', "Widow's Watch", 'The Narrow Sea', 'The Shivering Sea'],
+        adjacent: ['Winterfell', 'Moat Cailin', "Widow's Watch", 'The Narrow Sea', 'The Shivering Sea', 'White Harbor Port'],
         units: []
     },
     "Widow's Watch": {
@@ -109,7 +109,7 @@ export const INITIAL_MAP: Record<string, Area> = {
     'Lannisport': {
         id: 'Lannisport', name: 'Lannisport', type: 'Land',
         stronghold: true, supply: 2,
-        adjacent: ['Riverrun', 'Stoney Sept', 'Searoad Marches', 'The Golden Sound'],
+        adjacent: ['Riverrun', 'Stoney Sept', 'Searoad Marches', 'The Golden Sound', 'Lannisport Port'],
         units: []
     },
     'Stoney Sept': {
@@ -132,14 +132,14 @@ export const INITIAL_MAP: Record<string, Area> = {
     'Harrenhal': {
         id: 'Harrenhal', name: 'Harrenhal', type: 'Land',
         castle: true, power: 1,
-        adjacent: ['Riverrun', 'Stoney Sept', 'Crackclaw Point', "King's Landing"],
+        adjacent: ['Riverrun', 'Stoney Sept', 'Crackclaw Point', 'Blackwater'],
         units: []
     },
     'Crackclaw Point': {
         id: 'Crackclaw Point', name: 'Crackclaw Point', type: 'Land',
         castle: true,
         adjacent: [
-            'Harrenhal', "King's Landing", 'The Mountains of the Moon',
+            'Harrenhal', "King's Landing", 'The Mountains of the Moon', 'Blackwater',
             'Blackwater Bay', 'Shipbreaker Bay', 'The Narrow Sea'
         ],
         units: []
@@ -147,7 +147,7 @@ export const INITIAL_MAP: Record<string, Area> = {
     "King's Landing": {
         id: "King's Landing", name: "King's Landing", type: 'Land',
         stronghold: true, power: 2,
-        adjacent: ['Harrenhal', 'Crackclaw Point', 'Blackwater', 'Kingswood', 'The Reach', 'Blackwater Bay'],
+        adjacent: ['Crackclaw Point', 'Blackwater', 'Kingswood', 'The Reach', 'Blackwater Bay'],
         units: []
     },
     'Blackwater': {
@@ -155,7 +155,7 @@ export const INITIAL_MAP: Record<string, Area> = {
         supply: 2,
         adjacent: [
             "King's Landing", 'Stoney Sept', 'Searoad Marches', 'Crackclaw Point',
-            'The Reach', 'Kingswood', 'The Boneway', 'Dornish Marches'
+            'The Reach', 'Harrenhal'
         ],
         units: []
     },
@@ -165,7 +165,7 @@ export const INITIAL_MAP: Record<string, Area> = {
         id: 'Kingswood', name: 'Kingswood', type: 'Land',
         supply: 1, power: 1,
         adjacent: [
-            "King's Landing", 'Blackwater', "Storm's End", 'The Boneway', 'The Reach',
+            "King's Landing", "Storm's End", 'The Boneway', 'The Reach',
             'Blackwater Bay', 'Shipbreaker Bay'
         ],
         units: []
@@ -173,7 +173,7 @@ export const INITIAL_MAP: Record<string, Area> = {
     "Storm's End": {
         id: "Storm's End", name: "Storm's End", type: 'Land',
         castle: true,
-        adjacent: ['Kingswood', 'The Boneway', 'East Summer Sea', 'Sea of Dorne', 'Shipbreaker Bay'],
+        adjacent: ['Kingswood', 'The Boneway', 'East Summer Sea', 'Sea of Dorne', 'Shipbreaker Bay', "Storm's End Port"],
         units: []
     },
     'Highgarden': {
@@ -187,20 +187,20 @@ export const INITIAL_MAP: Record<string, Area> = {
         castle: true,
         adjacent: [
             'Highgarden', 'Searoad Marches', 'Blackwater', "King's Landing",
-            'Kingswood', 'Dornish Marches', 'The Boneway', 'Oldtown'
+            'Kingswood', 'Dornish Marches', 'The Boneway'
         ],
         units: []
     },
     'Dornish Marches': {
         id: 'Dornish Marches', name: 'Dornish Marches', type: 'Land',
         power: 1,
-        adjacent: ['Highgarden', 'The Reach', 'Blackwater', 'The Boneway', "Prince's Pass", 'Oldtown', 'Three Towers'],
+        adjacent: ['Highgarden', 'The Reach', 'The Boneway', "Prince's Pass", 'Oldtown', 'Three Towers'],
         units: []
     },
     'Oldtown': {
         id: 'Oldtown', name: 'Oldtown', type: 'Land',
         stronghold: true,
-        adjacent: ['Highgarden', 'The Reach', 'Dornish Marches', 'Three Towers', 'Redwyne Straits'],
+        adjacent: ['Highgarden', 'Dornish Marches', 'Three Towers', 'Redwyne Straits', 'Oldtown Port'],
         units: []
     },
     'Three Towers': {
@@ -215,7 +215,7 @@ export const INITIAL_MAP: Record<string, Area> = {
         id: 'The Boneway', name: 'The Boneway', type: 'Land',
         power: 1,
         adjacent: [
-            'Dornish Marches', "Prince's Pass", 'The Reach', 'Kingswood', 'Blackwater',
+            'Dornish Marches', "Prince's Pass", 'The Reach', 'Kingswood',
             "Storm's End", 'Yronwood', 'Sea of Dorne'
         ],
         units: []
@@ -247,7 +247,7 @@ export const INITIAL_MAP: Record<string, Area> = {
     'Sunspear': {
         id: 'Sunspear', name: 'Sunspear', type: 'Land',
         stronghold: true, supply: 1, power: 1,
-        adjacent: ['Yronwood', 'Salt Shore', 'East Summer Sea', 'Sea of Dorne'],
+        adjacent: ['Yronwood', 'Salt Shore', 'East Summer Sea', 'Sea of Dorne', 'Sunspear Port'],
         units: []
     },
 
@@ -255,13 +255,13 @@ export const INITIAL_MAP: Record<string, Area> = {
     'Pyke': {
         id: 'Pyke', name: 'Pyke', type: 'Land',
         stronghold: true, supply: 1, power: 1,
-        adjacent: ["Ironman's Bay"],
+        adjacent: ["Ironman's Bay", 'Pyke Port'],
         units: []
     },
     'Dragonstone': {
         id: 'Dragonstone', name: 'Dragonstone', type: 'Land',
         stronghold: true, supply: 1, power: 1,
-        adjacent: ['Shipbreaker Bay'],
+        adjacent: ['Shipbreaker Bay', 'Dragonstone Port'],
         units: []
     },
     'The Arbor': {
@@ -277,7 +277,7 @@ export const INITIAL_MAP: Record<string, Area> = {
         id: 'Bay of Ice', name: 'Bay of Ice', type: 'Sea',
         adjacent: [
             'Castle Black', 'The Stony Shore', 'Winterfell', "Flint's Finger", 'Greywater Watch',
-            'Sunset Sea'
+            'Sunset Sea', 'Winterfell Port'
         ],
         units: []
     },
@@ -301,7 +301,7 @@ export const INITIAL_MAP: Record<string, Area> = {
         id: "Ironman's Bay", name: "Ironman's Bay", type: 'Sea',
         adjacent: [
             'Pyke', "Flint's Finger", 'Greywater Watch', 'Seagard', 'Riverrun',
-            'Sunset Sea', 'The Golden Sound'
+            'Sunset Sea', 'The Golden Sound', 'Pyke Port'
         ],
         units: []
     },
@@ -309,7 +309,7 @@ export const INITIAL_MAP: Record<string, Area> = {
         id: 'The Golden Sound', name: 'The Golden Sound', type: 'Sea',
         adjacent: [
             'Lannisport', 'Riverrun', 'Searoad Marches',
-            "Ironman's Bay", 'Sunset Sea'
+            "Ironman's Bay", 'Sunset Sea', 'Lannisport Port'
         ],
         units: []
     },
@@ -318,7 +318,7 @@ export const INITIAL_MAP: Record<string, Area> = {
         adjacent: [
             'Moat Cailin', 'White Harbor', "Widow's Watch", 'The Twins', 'The Fingers',
             'The Mountains of the Moon', 'The Eyrie', 'Crackclaw Point',
-            'The Shivering Sea', 'Shipbreaker Bay'
+            'The Shivering Sea', 'Shipbreaker Bay', 'White Harbor Port'
         ],
         units: []
     },
@@ -334,7 +334,8 @@ export const INITIAL_MAP: Record<string, Area> = {
         id: 'Shipbreaker Bay', name: 'Shipbreaker Bay', type: 'Sea',
         adjacent: [
             'Dragonstone', 'Crackclaw Point', 'Kingswood', "Storm's End",
-            'The Narrow Sea', 'Blackwater Bay', 'East Summer Sea'
+            'The Narrow Sea', 'Blackwater Bay', 'East Summer Sea',
+            'Dragonstone Port', "Storm's End Port"
         ],
         units: []
     },
@@ -342,7 +343,7 @@ export const INITIAL_MAP: Record<string, Area> = {
         id: 'Redwyne Straits', name: 'Redwyne Straits', type: 'Sea',
         adjacent: [
             'Highgarden', 'Oldtown', 'The Arbor', 'Three Towers',
-            'West Summer Sea'
+            'West Summer Sea', 'Oldtown Port'
         ],
         units: []
     },
@@ -358,7 +359,7 @@ export const INITIAL_MAP: Record<string, Area> = {
         id: 'East Summer Sea', name: 'East Summer Sea', type: 'Sea',
         adjacent: [
             'Sunspear', 'Salt Shore', 'Starfall', "Storm's End",
-            'West Summer Sea', 'Sea of Dorne', 'Shipbreaker Bay'
+            'West Summer Sea', 'Sea of Dorne', 'Shipbreaker Bay', 'Sunspear Port'
         ],
         units: []
     },
@@ -402,11 +403,6 @@ export const INITIAL_MAP: Record<string, Area> = {
         id: "Storm's End Port", name: "Storm's End Port", type: 'Port',
         connectedLand: "Storm's End", connectedSea: 'Shipbreaker Bay', maxShips: 3,
         adjacent: ["Storm's End", 'Shipbreaker Bay'], units: []
-    },
-    'Highgarden Port': {
-        id: 'Highgarden Port', name: 'Highgarden Port', type: 'Port',
-        connectedLand: 'Highgarden', connectedSea: 'Redwyne Straits', maxShips: 3,
-        adjacent: ['Highgarden', 'Redwyne Straits'], units: []
     },
     'Oldtown Port': {
         id: 'Oldtown Port', name: 'Oldtown Port', type: 'Port',

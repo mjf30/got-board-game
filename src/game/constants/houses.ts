@@ -8,7 +8,7 @@ export const HOUSE_CARDS: Record<HouseName, Card[]> = {
     Stark: [
         { id: 'stark-eddard', name: 'Eddard Stark', house: 'Stark', strength: 4, swords: 2, text: '' },
         { id: 'stark-robb', name: 'Robb Stark', house: 'Stark', strength: 3, text: 'If you win this combat, you may choose the area to which your opponent retreats. You must choose a legal area where your opponent loses the fewest units.' },
-        { id: 'stark-greatjon', name: 'Greatjon Umber', house: 'Stark', strength: 2, swords: 2, text: '' },
+        { id: 'stark-greatjon', name: 'Greatjon Umber', house: 'Stark', strength: 2, swords: 1, text: '' },
         { id: 'stark-bolton', name: 'Roose Bolton', house: 'Stark', strength: 2, text: 'If you lose this combat, return your entire House card discard pile into your hand (including this card).' },
         { id: 'stark-blackfish', name: 'The Blackfish', house: 'Stark', strength: 1, text: 'You do not take casualties in this combat from House card abilities, Combat icons, or Tides of Battle cards.' },
         { id: 'stark-ser-rodrick', name: 'Ser Rodrik Cassel', house: 'Stark', strength: 1, fortifications: 2, text: '' },
@@ -45,7 +45,7 @@ export const HOUSE_CARDS: Record<HouseName, Card[]> = {
         { id: 'tyr-mace', name: 'Mace Tyrell', house: 'Tyrell', strength: 4, text: "Immediately destroy one of your opponent's attacking or defending Footman units." },
         { id: 'tyr-loras', name: 'Ser Loras Tyrell', house: 'Tyrell', strength: 3, text: 'If you are attacking and win this combat, move the March Order token into the conquered area. The March Order may be resolved again later this round.' },
         { id: 'tyr-garlan', name: 'Ser Garlan Tyrell', house: 'Tyrell', strength: 2, swords: 2, text: '' },
-        { id: 'tyr-randyll', name: 'Randyll Tarly', house: 'Tyrell', strength: 2, swords: 2, text: '' },
+        { id: 'tyr-randyll', name: 'Randyll Tarly', house: 'Tyrell', strength: 2, swords: 1, text: '' },
         { id: 'tyr-margaery', name: 'Margaery Tyrell', house: 'Tyrell', strength: 1, fortifications: 1, text: '' },
         { id: 'tyr-alester', name: 'Alester Florent', house: 'Tyrell', strength: 1, fortifications: 1, text: '' },
         { id: 'tyr-queen', name: 'Queen of Thorns', house: 'Tyrell', strength: 0, text: "Immediately remove one of your opponent's Order tokens in any one area adjacent to the embattled area. You may not remove the March Order token used to start this combat." },
@@ -101,6 +101,7 @@ export const HOUSE_SETUP: Record<HouseName, HouseSetup> = {
         startingPositions: { ironThrone: 2, fiefdoms: 6, kingsCourt: 1 },
         startingUnits: [
             { area: 'Lannisport', units: ['Knight', 'Footman'] },
+            { area: 'Lannisport Port', units: ['Ship'] },
             { area: 'Stoney Sept', units: ['Footman'] },
             { area: 'The Golden Sound', units: ['Ship'] },
         ],

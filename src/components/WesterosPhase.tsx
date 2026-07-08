@@ -19,13 +19,13 @@ export const WesterosPhase: React.FC<WesterosPhaseProps> = ({ gameState, onConti
         return card?.text || '';
     };
 
-    // Decision UI
+    // Decision UI (also used for combat decisions — must render above the combat modal)
     if (gameState.pendingDecision) {
         const { chooser, options, cardName } = gameState.pendingDecision;
         return (
             <div style={{
                 position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 200,
+                backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 450,
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 color: 'white'
             }}>
@@ -102,7 +102,9 @@ export const WesterosPhase: React.FC<WesterosPhaseProps> = ({ gameState, onConti
     }
 
     // Hide Westeros Phase UI if there are pending interactive events (Mustering, Bidding, etc.)
-    if (gameState.pendingBidding || gameState.pendingMustering || gameState.pendingGameOfThrones || gameState.pendingPowerTokenArea || gameState.pendingRetreat) {
+    if (gameState.pendingBidding || gameState.pendingMustering || gameState.pendingGameOfThrones ||
+        gameState.pendingPowerTokenArea || gameState.pendingRetreat || gameState.pendingUnitSelection ||
+        gameState.pendingBidTieBreak || gameState.pendingReconcile) {
         return null;
     }
 
